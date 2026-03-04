@@ -1,7 +1,6 @@
 # 🟩🟨⬜ Proyecto Wordle - Ingeniería Web ⬜🟨🟩
 
-**Integrantes del equipo:** Jaime Hernández Pérez  
-**Asignatura:** Ingeniería Web
+**Integrantes del equipo:** Jaime Hernández Pérez 
 
 ---
 
