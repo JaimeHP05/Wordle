@@ -1,0 +1,64 @@
+/* un root para facilitar la vida */
+:root {
+    --bg-color: #121213;
+    --text-color: #ffffff;
+    --border-color: #3a3a3c;
+    --cell-size: 62px;
+    --gap-size: 5px;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+header {
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 0;
+    margin-bottom: 30px;
+}
+
+main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+    width: 100%;
+}
+
+.board {
+    display: grid;
+    /* Las columnas se definen en JS, las filas son siempre 6 */
+    grid-template-rows: repeat(6, 1fr);
+    gap: var(--gap-size);
+    padding: 10px;
+}
+
+.cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    border: 2px solid var(--border-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    box-sizing: border-box;
+}
+
+/* Para pantallas pequeñas */
+@media (max-width: 400px) {
+    :root {
+        --cell-size: 50px;
+        --gap-size: 4px;
+    }
+}
