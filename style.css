@@ -62,3 +62,47 @@ main {
         --gap-size: 4px;
     }
 }
+
+.keyboard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 30px;
+    width: 100%;
+    max-width: 500px;
+    padding: 0 10px;
+}
+
+.key-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.key {
+    background-color: #818384;
+    color: var(--text-color);
+    border: none;
+    border-radius: 4px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    flex: 1;
+    height: 58px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+}
+
+.key:active {
+    transform: scale(0.95);
+}
+
+.wide-key {
+    flex: 1.5;
+    font-size: 1rem;
+}
