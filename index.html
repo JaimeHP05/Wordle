@@ -11,8 +11,9 @@
         <h1>Wordle</h1>
     </header>
     <main>
-        <div id="board" class="board"></div>
-        <div id="keyboard" class="keyboard"></div>
+        <div id="announcer" aria-live="polite" class="sr-only"></div>
+        <div id="game-board" class="board" role="grid" aria-label="Tablero de juego"></div>
+        <div id="keyboard" class="keyboard" aria-label="Teclado virtual"></div>
     </main>
     <script src="script.js"></script>
 </body>
