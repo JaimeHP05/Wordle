@@ -28,10 +28,26 @@ header {
 
 main {
     display: flex;
+    flex-direction: row; 
     justify-content: center;
     align-items: center;
+    gap: 50px; 
     flex-grow: 1;
     width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
 }
 
 .board {
@@ -55,23 +71,13 @@ main {
     box-sizing: border-box;
 }
 
-/* Para pantallas pequeñas */
-@media (max-width: 400px) {
-    :root {
-        --cell-size: 50px;
-        --gap-size: 4px;
-    }
-}
-
 .keyboard {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    margin-top: 30px;
     width: 100%;
     max-width: 500px;
-    padding: 0 10px;
 }
 
 .key-row {
@@ -96,6 +102,12 @@ main {
     justify-content: center;
     align-items: center;
     user-select: none;
+    transition: background-color 0.2s;
+}
+
+.key:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
 }
 
 .key:active {
@@ -105,4 +117,15 @@ main {
 .wide-key {
     flex: 1.5;
     font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    main {
+        flex-direction: column;
+        gap: 30px; 
+    }
+    :root {
+        --cell-size: 50px;
+        --gap-size: 4px;
+    }
 }
