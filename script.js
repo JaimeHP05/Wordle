@@ -2,38 +2,68 @@ document.addEventListener("DOMContentLoaded", () => {
     const board = document.getElementById("game-board");
     const keyboard = document.getElementById("keyboard");
     const announcer = document.getElementById("announcer");
-    
+
+    const configModal = document.getElementById("config-modal");
+    const configForm = document.getElementById("config-form");
+    const langSelect = document.getElementById("lang-select");
+    const lengthSelect = document.getElementById("length-select");
+    const sliderValue = document.getElementById("slider-value");
+
+    configModal.showModal();
+
+    lengthSelect.addEventListener("input", (e) => {
+        sliderValue.textContent = e.target.value;
+    });
+
     const numRows = 6;
     let numCols = 5; 
-    
-    // Donde estamos escribiendo
+    let currentLang = 'es'; 
     let currentRow = 0;
     let currentCol = 0;
 
+    // Configuración inicial
+    configForm.addEventListener("submit", (e) => {
+        currentLang = langSelect.value;
+        numCols = parseInt(lengthSelect.value);
+
+        board.innerHTML = '';
+        keyboard.innerHTML = '';
+
+        currentRow = 0;
+        currentCol = 0;
+
+        createBoard();
+        createKeyboard();
+        
+        announcer.textContent = `Partida iniciada. Palabra de ${numCols} letras en ${currentLang === 'es' ? 'español' : 'inglés'}.`;
+    });
+
     // Tablero
     function createBoard() {
-        board.style.gridTemplateColumns = `repeat(${numCols}, 1fr)`;
+        board.style.gridTemplateColumns = `repeat(${numCols}, minmax(0, var(--cell-size)))`;
         for (let r = 0; r < numRows; r++) {
             for (let c = 0; c < numCols; c++) {
                 const cell = document.createElement("div");
                 cell.classList.add("cell");
                 cell.setAttribute("id", `cell-${r}-${c}`);
-                cell.setAttribute("role", "gridcell"); // Semántica
-                cell.setAttribute("aria-label", "Casilla vacía"); // Asistencia inicial
+                cell.setAttribute("role", "gridcell");
+                cell.setAttribute("aria-label", "Casilla vacía");
                 board.appendChild(cell);
             }
         }
     }
 
-    // Teclado visual
-    const keyboardLayout = [
-        ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-        ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ'],
-        ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫']
-    ];
-
     // Teclado
     function createKeyboard() {
+        const middleRow = currentLang === 'es' 
+            ? ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ']
+            : ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
+        const keyboardLayout = [
+            ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+            middleRow,
+            ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫']
+        ];
+        
         keyboardLayout.forEach(row => {
             const rowDiv = document.createElement("div");
             rowDiv.classList.add("key-row");
@@ -62,6 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Manejador de teclado
     function handleInput(key) {
+        if (configModal.open) return;
         // Borrar
         if (key === '⌫' || key === 'Backspace') {
             if (currentCol > 0) {
@@ -88,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Introducir letras sin pasarse del límite
-        const isLetter = /^[a-zA-ZñÑ]$/.test(key);
+        const isLetter = currentLang === 'es' ? /^[a-zA-ZñÑ]$/.test(key) : /^[a-zA-Z]$/.test(key);
         if (isLetter && currentCol < numCols && currentRow < numRows) {
             const letterUpper = key.toUpperCase();
             const cell = document.getElementById(`cell-${currentRow}-${currentCol}`);
@@ -103,7 +134,4 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("keydown", (e) => {
         handleInput(e.key);
     });
-
-    createBoard();
-    createKeyboard();
 });
