@@ -7,6 +7,26 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <dialog id="config-modal" class="modal">
+        <h2>Configurar Partida</h2>
+        <form id="config-form" method="dialog">
+            <div class="form-group">
+                <label for="lang-select">Idioma:</label>
+                <select id="lang-select">
+                    <option value="es">Español (con Ñ)</option>
+                    <option value="en">Inglés</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="length-select">Número de letras:</label>
+                <div class="slider-container">
+                    <input type="range" id="length-select" min="5" max="10" value="5" step="1">
+                    <span id="slider-value" class="slider-value">5</span>
+                </div>
+            </div>
+            <button type="submit" class="btn-primary">¡Empezar a jugar!</button>
+        </form>
+    </dialog>
     <header>
         <h1>Wordle</h1>
     </header>
