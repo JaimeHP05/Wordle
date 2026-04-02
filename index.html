@@ -7,13 +7,24 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <header>
+        <h1>Wordle</h1>
+    </header>
+    <main>
+        <div id="announcer" aria-live="polite" class="sr-only"></div>
+        <div id="loading-screen" class="hidden">
+            <p>Descargando diccionario, por favor espera...</p>
+        </div>
+        <div id="game-board" class="board" role="grid" aria-label="Tablero de juego"></div>
+        <div id="keyboard" class="keyboard" aria-label="Teclado virtual"></div>
+    </main>
     <dialog id="config-modal" class="modal">
         <h2>Configurar Partida</h2>
         <form id="config-form" method="dialog">
             <div class="form-group">
                 <label for="lang-select">Idioma:</label>
                 <select id="lang-select">
-                    <option value="es">Español (con Ñ)</option>
+                    <option value="es">Español</option>
                     <option value="en">Inglés</option>
                 </select>
             </div>
@@ -27,14 +38,6 @@
             <button type="submit" class="btn-primary">¡Empezar a jugar!</button>
         </form>
     </dialog>
-    <header>
-        <h1>Wordle</h1>
-    </header>
-    <main>
-        <div id="announcer" aria-live="polite" class="sr-only"></div>
-        <div id="game-board" class="board" role="grid" aria-label="Tablero de juego"></div>
-        <div id="keyboard" class="keyboard" aria-label="Teclado virtual"></div>
-    </main>
     <script src="script.js"></script>
 </body>
 </html>
