@@ -226,3 +226,47 @@ input[type="range"] {
     text-align: center;
     color: white;
 }
+
+:root {
+    --color-correct: #538d4e; /* Verde */
+    --color-present: #b59f3b; /* Amarillo */
+    --color-absent: #3a3a3c;  /* Gris oscuro */
+}
+
+.cell.correct, .key.correct {
+    background-color: var(--color-correct);
+    border-color: var(--color-correct);
+    color: white;
+}
+
+.cell.present, .key.present {
+    background-color: var(--color-present);
+    border-color: var(--color-present);
+    color: white;
+}
+
+.cell.absent, .key.absent {
+    background-color: var(--color-absent);
+    border-color: var(--color-absent);
+    color: white;
+}
+
+.cell {
+    transition: background-color 0.5s ease, border-color 0.5s ease;
+}
+
+#loading-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--border-color);
+    padding: 20px 40px;
+    border-radius: 8px;
+    font-weight: bold;
+    z-index: 100;
+}
+
+.hidden {
+    display: none !important;
+}
