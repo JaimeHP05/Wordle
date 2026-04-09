@@ -3,22 +3,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const keyboard = document.getElementById("keyboard");
     const announcer = document.getElementById("announcer");
     const loadingScreen = document.getElementById("loading-screen");
-
+    
     const configModal = document.getElementById("config-modal");
     const configForm = document.getElementById("config-form");
     const langSelect = document.getElementById("lang-select");
     const lengthSelect = document.getElementById("length-select");
-    const sliderValue = document.getElementById("slider-value");
+    const sliderValue = document.getElementById("slider-value"); 
 
     const numRows = 6;
     let numCols = 5; 
     let currentLang = 'es'; 
     let currentRow = 0;
     let currentCol = 0;
-
+    
     let secretWord = ""; 
     let isGameOver = false;
-    let validWordsSet = new Set();
+    let validWordsSet = new Set(); 
 
     const dicUrls = {
         es: "https://raw.githubusercontent.com/javierarce/palabras/master/listado-general.txt",
@@ -29,109 +29,176 @@ document.addEventListener("DOMContentLoaded", () => {
         return word.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
     }
 
-    configModal.showModal();
+    function getTodayDate() {
+        const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+        return (new Date(Date.now() - tzoffset)).toISOString().split('T')[0];
+    }
 
-    lengthSelect.addEventListener("input", (e) => {
-        sliderValue.textContent = e.target.value;
-    });
+    function saveGameState() {
+        const boardState = [];
+        for (let r = 0; r < numRows; r++) {
+            let rowString = "";
+            for (let c = 0; c < numCols; c++) {
+                const cell = document.getElementById(`cell-${r}-${c}`);
+                rowString += cell.textContent || " ";
+            }
+            boardState.push(rowString);
+        }
+
+        const gameState = {
+            date: getTodayDate(),
+            lang: currentLang,
+            cols: numCols,
+            secret: secretWord,
+            board: boardState,
+            currentRow: currentRow,
+            currentCol: currentCol,
+            gameOver: isGameOver
+        };
+        localStorage.setItem("wordleState", JSON.stringify(gameState));
+    }
+
+    async function loadGameState() {
+        const saved = JSON.parse(localStorage.getItem("wordleState"));
+        const today = getTodayDate();
+
+        if (saved && saved.date === today) {
+            currentLang = saved.lang;
+            numCols = saved.cols;
+            secretWord = saved.secret;
+            currentRow = saved.currentRow;
+            currentCol = saved.currentCol;
+            isGameOver = saved.gameOver;
+
+            configModal.close();
+            
+            await fetchDictionary(currentLang, numCols);
+            createBoard();
+            createKeyboard();
+
+            for (let r = 0; r < numRows; r++) {
+                for (let c = 0; c < numCols; c++) {
+                    const char = saved.board[r][c];
+                    if (char !== " ") {
+                        const cell = document.getElementById(`cell-${r}-${c}`);
+                        cell.textContent = char;
+                    }
+                }
+                if (r < currentRow) {
+                    evaluateSavedRow(r);
+                }
+            }
+
+            if (isGameOver) {
+                announcer.textContent = "Ya has completado el Wordle de hoy.";
+                setTimeout(() => alert("Ya has jugado hoy. ¡Vuelve mañana para una nueva palabra!"), 500);
+            }
+            return true;
+        }
+        return false;
+    }
     
-    // Configuración inicial
-    configForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        configModal.close();
-        
-        currentLang = langSelect.value;
-        numCols = parseInt(lengthSelect.value);
-
+    async function fetchDictionary(lang, cols) {
         loadingScreen.classList.remove("hidden");
-        board.innerHTML = '';
-        keyboard.innerHTML = '';
-
         try {
-            const response = await fetch(dicUrls[currentLang]);
+            const response = await fetch(dicUrls[lang]);
             const textData = await response.text();
-
+            
             validWordsSet.clear();
             const allWords = textData.split('\n');
-            
             const filteredWords = [];
+            
             for (let word of allWords) {
                 let cleanWord = word.trim();
-                if (cleanWord.length === numCols) {
+                if (cleanWord.length === cols) {
                     let normalized = normalizeWord(cleanWord);
                     validWordsSet.add(normalized);
                     filteredWords.push(normalized);
                 }
             }
 
-            if (filteredWords.length === 0) {
-                throw new Error("No se encontraron palabras de esa longitud en el diccionario.");
+            if (filteredWords.length === 0) throw new Error("Diccionario vacío");
+            
+            if (!secretWord) {
+                secretWord = filteredWords[Math.floor(Math.random() * filteredWords.length)];
+                console.log("Palabra secreta:", secretWord);
             }
-
-            secretWord = filteredWords[Math.floor(Math.random() * filteredWords.length)];
-            console.log("Palabra secreta (solo para ti, desarrollador):", secretWord);
-
-            currentRow = 0;
-            currentCol = 0;
-            isGameOver = false;
-            loadingScreen.classList.add("hidden");
-
-            createBoard();
-            createKeyboard();
-            announcer.textContent = `Partida iniciada. Diccionario cargado con éxito. Palabra de ${numCols} letras.`;
-
         } catch (error) {
             console.error(error);
-            loadingScreen.innerHTML = "<p>Error al cargar el diccionario. Recarga la página.</p>";
+            loadingScreen.innerHTML = "<p>Error de conexión. Recarga la página.</p>";
+        } finally {
+            loadingScreen.classList.add("hidden");
         }
+    }
+
+    async function initGame() {
+        const hasSavedGame = await loadGameState();
+        if (!hasSavedGame) {
+            configModal.showModal();
+        }
+    }
+
+    lengthSelect.addEventListener("input", (e) => {
+        sliderValue.textContent = e.target.value;
     });
 
-    // Tablero
+    configForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        configModal.close();
+
+        currentLang = langSelect.value;
+        numCols = parseInt(lengthSelect.value);
+        secretWord = "";
+        currentRow = 0;
+        currentCol = 0;
+        isGameOver = false;
+
+        board.innerHTML = '';
+        keyboard.innerHTML = '';
+
+        await fetchDictionary(currentLang, numCols);
+        
+        createBoard();
+        createKeyboard();
+        saveGameState();
+        
+        announcer.textContent = `Partida iniciada. Palabra de ${numCols} letras.`;
+    });
+
     function createBoard() {
+        board.innerHTML = '';
         board.style.gridTemplateColumns = `repeat(${numCols}, minmax(0, var(--cell-size)))`;
         for (let r = 0; r < numRows; r++) {
             for (let c = 0; c < numCols; c++) {
                 const cell = document.createElement("div");
                 cell.classList.add("cell");
                 cell.setAttribute("id", `cell-${r}-${c}`);
-                cell.setAttribute("role", "gridcell");
-                cell.setAttribute("aria-label", "Casilla vacía");
                 board.appendChild(cell);
             }
         }
     }
 
-    // Teclado
     function createKeyboard() {
+        keyboard.innerHTML = '';
         const middleRow = currentLang === 'es' 
             ? ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ']
             : ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
+
         const keyboardLayout = [
             ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
             middleRow,
             ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫']
         ];
-        
+
         keyboardLayout.forEach(row => {
             const rowDiv = document.createElement("div");
             rowDiv.classList.add("key-row");
-            
             row.forEach(key => {
                 const button = document.createElement("button");
                 button.textContent = key;
                 button.classList.add("key");
-                button.setAttribute("id", `key-${key}`);
-
-                if (key === 'ENTER') {
-                    button.classList.add("wide-key");
-                    button.setAttribute("aria-label", "Enviar intento");
-                } else if (key === '⌫') {
-                    button.classList.add("wide-key");
-                    button.setAttribute("aria-label", "Borrar letra");
-                } else {
-                    button.setAttribute("aria-label", `Letra ${key}`);
-                }
-                
+                button.setAttribute("id", `key-${key}`); 
+                if (key === 'ENTER' || key === '⌫') button.classList.add("wide-key");
                 button.addEventListener("click", () => handleInput(key));
                 rowDiv.appendChild(button);
             });
@@ -139,26 +206,38 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function evaluateSavedRow(rowIdx) {
+        let guess = "";
+        for (let c = 0; c < numCols; c++) guess += document.getElementById(`cell-${rowIdx}-${c}`).textContent;
+        applyColors(guess, rowIdx);
+    }
+
     function evaluateGuess() {
         let guess = "";
-        const currentCells = [];
-        
-        for (let c = 0; c < numCols; c++) {
-            const cell = document.getElementById(`cell-${currentRow}-${c}`);
-            guess += cell.textContent;
-            currentCells.push(cell);
-        }
+        for (let c = 0; c < numCols; c++) guess += document.getElementById(`cell-${currentRow}-${c}`).textContent;
 
         if (!validWordsSet.has(guess)) {
             alert("La palabra no está en el diccionario.");
-            announcer.textContent = "La palabra no está en el diccionario.";
             return false;
         }
 
-        let secretLettersCount = {};
-        for (let char of secretWord) {
-            secretLettersCount[char] = (secretLettersCount[char] || 0) + 1;
+        const correctCount = applyColors(guess, currentRow);
+
+        if (correctCount === numCols) {
+            isGameOver = true;
+            setTimeout(() => alert("¡Felicidades! Has adivinado la palabra."), 500);
+        } else if (currentRow === numRows - 1) { 
+            isGameOver = true;
+            setTimeout(() => alert(`¡Oh no! Has perdido. La palabra era: ${secretWord}`), 500);
         }
+
+        saveGameState();
+        return true; 
+    }
+
+    function applyColors(guess, rowIdx) {
+        let secretLettersCount = {};
+        for (let char of secretWord) secretLettersCount[char] = (secretLettersCount[char] || 0) + 1;
 
         let statuses = Array(numCols).fill("absent");
         let correctCount = 0; 
@@ -178,19 +257,14 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        let resultAnnouncement = "Resultado: ";
         for (let i = 0; i < numCols; i++) {
             const letter = guess[i];
             const status = statuses[i];
-            const cell = currentCells[i];
+            const cell = document.getElementById(`cell-${rowIdx}-${i}`);
             const keyButton = document.getElementById(`key-${letter}`);
 
             cell.classList.add(status);
             
-            let ariaStatus = status === "correct" ? "correcta" : (status === "present" ? "presente en otra posición" : "incorrecta");
-            cell.setAttribute("aria-label", `Letra ${letter}, ${ariaStatus}`);
-            resultAnnouncement += `Letra ${letter} ${ariaStatus}. `;
-
             if (keyButton) {
                 if (status === "correct") {
                     keyButton.classList.remove("present", "absent");
@@ -203,57 +277,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         }
-
-        announcer.textContent = resultAnnouncement;
-
-        if (correctCount === numCols) {
-            isGameOver = true;
-            setTimeout(() => alert("¡Felicidades! Has adivinado la palabra."), 500);
-        } else if (currentRow === numRows - 1) { 
-            isGameOver = true;
-            setTimeout(() => alert(`Has perdido. La palabra era: ${secretWord}`), 500);
-        }
-
-        return true; 
+        return correctCount;
     }
-    
-    // Manejador de teclado
+
     function handleInput(key) {
         if (configModal.open || isGameOver || validWordsSet.size === 0) return; 
-        // Borrar
+
         if (key === '⌫' || key === 'Backspace') {
             if (currentCol > 0) {
                 currentCol--;
-                const cell = document.getElementById(`cell-${currentRow}-${currentCol}`);
-                cell.textContent = '';
+                document.getElementById(`cell-${currentRow}-${currentCol}`).textContent = '';
+                saveGameState();
             }
             return;
         }
 
-        // Enter bloquea la fila
         if (key === 'ENTER' || key === 'Enter') {
             if (currentCol === numCols) {
-                const isValidAttempt = evaluateGuess();
-                if (isValidAttempt) {
+                if (evaluateGuess()) {
                     currentRow++;
                     currentCol = 0;
+                    saveGameState();
                 }
             }
             return;
         }
 
-        // Introducir letras sin pasarse del límite
         const isLetter = currentLang === 'es' ? /^[a-zA-ZñÑ]$/.test(key) : /^[a-zA-Z]$/.test(key);
         if (isLetter && currentCol < numCols && currentRow < numRows) {
-            const letterUpper = key.toUpperCase();
-            const cell = document.getElementById(`cell-${currentRow}-${currentCol}`);
-            cell.textContent = letterUpper;
+            document.getElementById(`cell-${currentRow}-${currentCol}`).textContent = key.toUpperCase();
             currentCol++;
+            saveGameState();
         }
     }
 
-    // Teclado físico
-    document.addEventListener("keydown", (e) => {
-        handleInput(e.key);
-    });
+    document.addEventListener("keydown", (e) => handleInput(e.key));
+    initGame();
 });
