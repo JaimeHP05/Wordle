@@ -1,10 +1,12 @@
-/* un root para facilitar la vida */
 :root {
     --bg-color: #121213;
     --text-color: #ffffff;
     --border-color: #3a3a3c;
     --cell-size: 62px;
     --gap-size: 5px;
+    --color-correct: #538d4e;
+    --color-present: #b59f3b;
+    --color-absent: #3a3a3c;
 }
 
 body {
@@ -56,14 +58,14 @@ main {
     gap: var(--gap-size);
     padding: 10px;
     width: fit-content; 
-    max-width: 100%;
-    margin: 0 auto;
+    max-width: 100%; 
+    margin: 0 auto; 
 }
 
 .cell {
     width: var(--cell-size); 
     max-width: 100%; 
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 1 / 1; 
     border: 2px solid var(--border-color);
     display: flex;
     justify-content: center;
@@ -72,6 +74,25 @@ main {
     font-weight: bold;
     text-transform: uppercase;
     box-sizing: border-box;
+    transition: background-color 0.5s ease, border-color 0.5s ease;
+}
+
+.cell.correct, .key.correct {
+    background-color: var(--color-correct);
+    border-color: var(--color-correct);
+    color: white;
+}
+
+.cell.present, .key.present {
+    background-color: var(--color-present);
+    border-color: var(--color-present);
+    color: white;
+}
+
+.cell.absent, .key.absent {
+    background-color: var(--color-absent);
+    border-color: var(--color-absent);
+    color: white;
 }
 
 .keyboard {
@@ -91,7 +112,7 @@ main {
 }
 
 .key {
-    background-color: #818384;
+    background-color: #818384; 
     color: var(--text-color);
     border: none;
     border-radius: 4px;
@@ -99,7 +120,7 @@ main {
     font-weight: bold;
     cursor: pointer;
     text-transform: uppercase;
-    flex: 1;
+    flex: 1; 
     height: 58px;
     display: flex;
     justify-content: center;
@@ -124,9 +145,10 @@ main {
 
 @media (max-width: 768px) {
     main {
-        flex-direction: column;
+        flex-direction: column; 
         gap: 30px; 
     }
+
     :root {
         --cell-size: 50px;
         --gap-size: 4px;
@@ -142,6 +164,7 @@ main {
     max-width: 400px;
     width: 90%;
     text-align: center;
+    margin: auto; 
 }
 
 .modal::backdrop {
@@ -170,7 +193,7 @@ main {
 }
 
 .btn-primary {
-    background-color: #538d4e;
+    background-color: #538d4e; 
     color: white;
     border: none;
     padding: 12px 24px;
@@ -186,22 +209,6 @@ main {
     background-color: #43703e;
 }
 
-.modal {
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    padding: 20px 30px;
-    max-width: 400px;
-    width: 90%;
-    text-align: center;
-    margin: auto;
-}
-
-.modal::backdrop {
-    background: rgba(0, 0, 0, 0.8);
-}
-
 .slider-container {
     display: flex;
     align-items: center;
@@ -211,7 +218,7 @@ main {
 
 input[type="range"] {
     flex-grow: 1;
-    accent-color: #538d4e;
+    accent-color: #538d4e; 
     cursor: pointer;
     height: 8px;
 }
@@ -225,34 +232,6 @@ input[type="range"] {
     min-width: 20px;
     text-align: center;
     color: white;
-}
-
-:root {
-    --color-correct: #538d4e; /* Verde */
-    --color-present: #b59f3b; /* Amarillo */
-    --color-absent: #3a3a3c;  /* Gris oscuro */
-}
-
-.cell.correct, .key.correct {
-    background-color: var(--color-correct);
-    border-color: var(--color-correct);
-    color: white;
-}
-
-.cell.present, .key.present {
-    background-color: var(--color-present);
-    border-color: var(--color-present);
-    color: white;
-}
-
-.cell.absent, .key.absent {
-    background-color: var(--color-absent);
-    border-color: var(--color-absent);
-    color: white;
-}
-
-.cell {
-    transition: background-color 0.5s ease, border-color 0.5s ease;
 }
 
 #loading-screen {
