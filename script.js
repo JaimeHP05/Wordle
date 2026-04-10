@@ -10,6 +10,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const lengthSelect = document.getElementById("length-select");
     const sliderValue = document.getElementById("slider-value"); 
 
+    const historyModal = document.getElementById("history-modal");
+    const closeHistoryBtn = document.getElementById("close-history");
+    const btnHistoryHeader = document.getElementById("btn-history");
+    const historyList = document.getElementById("history-list");
+
     const numRows = 6;
     let numCols = 5; 
     let currentLang = 'es'; 
@@ -19,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let secretWord = ""; 
     let isGameOver = false;
     let validWordsSet = new Set(); 
+    let currentDictionary = [];
 
     const dicUrls = {
         es: "https://raw.githubusercontent.com/javierarce/palabras/master/listado-general.txt",
@@ -33,6 +39,36 @@ document.addEventListener("DOMContentLoaded", () => {
         const tzoffset = (new Date()).getTimezoneOffset() * 60000;
         return (new Date(Date.now() - tzoffset)).toISOString().split('T')[0];
     }
+
+    function getDeterministicWord(dateObj, wordList) {
+        const tzoffset = dateObj.getTimezoneOffset() * 60000;
+        const localDate = new Date(dateObj.getTime() - tzoffset);
+        const epochDays = Math.floor(localDate.getTime() / 86400000);
+        return wordList[epochDays % wordList.length];
+    }
+
+    function showHistoryPanel() {
+        historyList.innerHTML = "";
+        const today = new Date();
+        
+        for(let i = 1; i <= 5; i++) {
+            let pastDate = new Date();
+            pastDate.setDate(today.getDate() - i);
+            
+            let pastWord = getDeterministicWord(pastDate, currentDictionary);
+            let dateString = pastDate.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+            
+            let li = document.createElement("li");
+            li.innerHTML = `<span class="history-date">${dateString.toUpperCase()}</span> <span class="history-word">${pastWord}</span>`;
+            historyList.appendChild(li);
+        }
+        
+        btnHistoryHeader.classList.remove("hidden");
+        historyModal.showModal();
+    }
+
+    closeHistoryBtn.addEventListener("click", () => historyModal.close());
+    btnHistoryHeader.addEventListener("click", () => showHistoryPanel());
 
     function saveGameState() {
         const boardState = [];
@@ -79,19 +115,18 @@ document.addEventListener("DOMContentLoaded", () => {
             for (let r = 0; r < numRows; r++) {
                 for (let c = 0; c < numCols; c++) {
                     const char = saved.board[r][c];
-                    if (char !== " ") {
-                        const cell = document.getElementById(`cell-${r}-${c}`);
-                        cell.textContent = char;
-                    }
+                    if (char !== " ") document.getElementById(`cell-${r}-${c}`).textContent = char;
                 }
-                if (r < currentRow) {
-                    evaluateSavedRow(r);
-                }
+                if (r < currentRow) evaluateSavedRow(r);
             }
 
             if (isGameOver) {
+                btnHistoryHeader.classList.remove("hidden");
                 announcer.textContent = "Ya has completado el Wordle de hoy.";
-                setTimeout(() => alert("Ya has jugado hoy. ¡Vuelve mañana para una nueva palabra!"), 500);
+                setTimeout(() => {
+                    alert("Ya has jugado hoy. ¡Vuelve mañana para una nueva palabra!");
+                    showHistoryPanel();
+                }, 500);
             }
             return true;
         }
@@ -105,23 +140,23 @@ document.addEventListener("DOMContentLoaded", () => {
             const textData = await response.text();
             
             validWordsSet.clear();
+            currentDictionary = [];
             const allWords = textData.split('\n');
-            const filteredWords = [];
             
             for (let word of allWords) {
                 let cleanWord = word.trim();
                 if (cleanWord.length === cols) {
                     let normalized = normalizeWord(cleanWord);
                     validWordsSet.add(normalized);
-                    filteredWords.push(normalized);
+                    currentDictionary.push(normalized);
                 }
             }
 
-            if (filteredWords.length === 0) throw new Error("Diccionario vacío");
+            if (currentDictionary.length === 0) throw new Error("Diccionario vacío");
             
             if (!secretWord) {
-                secretWord = filteredWords[Math.floor(Math.random() * filteredWords.length)];
-                console.log("Palabra secreta:", secretWord);
+                secretWord = getDeterministicWord(new Date(), currentDictionary);
+                console.log("Palabra secreta de hoy:", secretWord);
             }
         } catch (error) {
             console.error(error);
@@ -133,14 +168,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function initGame() {
         const hasSavedGame = await loadGameState();
-        if (!hasSavedGame) {
-            configModal.showModal();
-        }
+        if (!hasSavedGame) configModal.showModal(); 
     }
 
-    lengthSelect.addEventListener("input", (e) => {
-        sliderValue.textContent = e.target.value;
-    });
+    lengthSelect.addEventListener("input", (e) => sliderValue.textContent = e.target.value);
 
     configForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -148,10 +179,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         currentLang = langSelect.value;
         numCols = parseInt(lengthSelect.value);
-        secretWord = "";
+        secretWord = ""; 
         currentRow = 0;
         currentCol = 0;
         isGameOver = false;
+        btnHistoryHeader.classList.add("hidden");
 
         board.innerHTML = '';
         keyboard.innerHTML = '';
@@ -160,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         createBoard();
         createKeyboard();
-        saveGameState();
+        saveGameState(); 
         
         announcer.textContent = `Partida iniciada. Palabra de ${numCols} letras.`;
     });
@@ -180,15 +212,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function createKeyboard() {
         keyboard.innerHTML = '';
-        const middleRow = currentLang === 'es' 
-            ? ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ']
-            : ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
-
-        const keyboardLayout = [
-            ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-            middleRow,
-            ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫']
-        ];
+        const middleRow = currentLang === 'es' ? ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ'] : ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
+        const keyboardLayout = [['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'], middleRow, ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫']];
 
         keyboardLayout.forEach(row => {
             const rowDiv = document.createElement("div");
@@ -225,13 +250,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (correctCount === numCols) {
             isGameOver = true;
-            setTimeout(() => alert("¡Felicidades! Has adivinado la palabra."), 500);
+            setTimeout(() => {
+                alert("¡Felicidades! Has adivinado la palabra.");
+                showHistoryPanel();
+            }, 500);
         } else if (currentRow === numRows - 1) { 
             isGameOver = true;
-            setTimeout(() => alert(`¡Oh no! Has perdido. La palabra era: ${secretWord}`), 500);
+            setTimeout(() => {
+                alert(`¡Oh no! Has perdido. La palabra era: ${secretWord}`);
+                showHistoryPanel();
+            }, 500);
         }
 
-        saveGameState();
+        saveGameState(); 
         return true; 
     }
 
@@ -281,13 +312,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function handleInput(key) {
-        if (configModal.open || isGameOver || validWordsSet.size === 0) return; 
+        if (configModal.open || historyModal.open || isGameOver || validWordsSet.size === 0) return; 
 
         if (key === '⌫' || key === 'Backspace') {
             if (currentCol > 0) {
                 currentCol--;
                 document.getElementById(`cell-${currentRow}-${currentCol}`).textContent = '';
-                saveGameState();
+                saveGameState(); 
             }
             return;
         }
@@ -297,7 +328,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (evaluateGuess()) {
                     currentRow++;
                     currentCol = 0;
-                    saveGameState();
+                    saveGameState(); 
                 }
             }
             return;
@@ -307,7 +338,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isLetter && currentCol < numCols && currentRow < numRows) {
             document.getElementById(`cell-${currentRow}-${currentCol}`).textContent = key.toUpperCase();
             currentCol++;
-            saveGameState();
+            saveGameState(); 
         }
     }
 
