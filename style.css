@@ -22,10 +22,29 @@ body {
 
 header {
     width: 100%;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
     border-bottom: 1px solid var(--border-color);
     padding: 10px 0;
     margin-bottom: 30px;
+}
+
+#btn-history {
+    position: absolute;
+    right: 20px;
+    background: none;
+    border: 2px solid var(--border-color);
+    color: var(--text-color);
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#btn-history:hover {
+    background-color: var(--border-color);
 }
 
 main {
@@ -193,7 +212,7 @@ main {
 }
 
 .btn-primary {
-    background-color: #538d4e; 
+    background-color: var(--color-correct); 
     color: white;
     border: none;
     padding: 12px 24px;
@@ -218,7 +237,7 @@ main {
 
 input[type="range"] {
     flex-grow: 1;
-    accent-color: #538d4e; 
+    accent-color: var(--color-correct); 
     cursor: pointer;
     height: 8px;
 }
@@ -248,4 +267,32 @@ input[type="range"] {
 
 .hidden {
     display: none !important;
+}
+
+.history-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+    text-align: left;
+}
+
+.history-list li {
+    background-color: #272729;
+    margin-bottom: 8px;
+    padding: 12px 15px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    border-left: 4px solid var(--color-correct);
+}
+
+.history-date {
+    color: #a1a1aa;
+    font-weight: bold;
+}
+
+.history-word {
+    font-weight: bold;
+    color: white;
+    letter-spacing: 2px;
 }
