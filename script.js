@@ -1,347 +1,374 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const board = document.getElementById("game-board");
-    const keyboard = document.getElementById("keyboard");
-    const announcer = document.getElementById("announcer");
-    const loadingScreen = document.getElementById("loading-screen");
-    
-    const configModal = document.getElementById("config-modal");
-    const configForm = document.getElementById("config-form");
-    const langSelect = document.getElementById("lang-select");
-    const lengthSelect = document.getElementById("length-select");
-    const sliderValue = document.getElementById("slider-value"); 
+:root {
+    --bg-color: #121213;
+    --text-color: #ffffff;
+    --border-color: #3a3a3c;
+    --cell-size: 62px;
+    --gap-size: 5px;
+    --color-correct: #538d4e;
+    --color-present: #b59f3b;
+    --color-absent: #3a3a3c;
+}
 
-    const historyModal = document.getElementById("history-modal");
-    const closeHistoryBtn = document.getElementById("close-history");
-    const btnHistoryHeader = document.getElementById("btn-history");
-    const historyList = document.getElementById("history-list");
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
 
-    const numRows = 6;
-    let numCols = 5; 
-    let currentLang = 'es'; 
-    let currentRow = 0;
-    let currentCol = 0;
-    
-    let secretWord = ""; 
-    let isGameOver = false;
-    let validWordsSet = new Set(); 
-    let currentDictionary = [];
+header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 0;
+    margin-bottom: 30px;
+}
 
-    const dicUrls = {
-        es: "https://raw.githubusercontent.com/javierarce/palabras/master/listado-general.txt",
-        en: "https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt"
-    };
+.header-buttons {
+    position: absolute;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+}
 
-    function normalizeWord(word) {
-        return word.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
+.icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    padding: 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.icon-btn:hover {
+    background-color: var(--border-color);
+}
+
+.icon-btn:active {
+    transform: scale(0.9);
+}
+
+main {
+    display: flex;
+    flex-direction: row; 
+    justify-content: center;
+    align-items: center;
+    gap: 50px; 
+    flex-grow: 1;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.board {
+    display: grid;
+    grid-template-rows: repeat(6, 1fr);
+    gap: var(--gap-size);
+    padding: 10px;
+    width: fit-content; 
+    max-width: 100%; 
+    margin: 0 auto; 
+}
+
+.cell {
+    width: var(--cell-size); 
+    max-width: 100%; 
+    aspect-ratio: 1 / 1; 
+    border: 2px solid var(--border-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: clamp(1rem, 4vw, 2rem); 
+    font-weight: bold;
+    text-transform: uppercase;
+    box-sizing: border-box;
+    transition: background-color 0.5s ease, border-color 0.5s ease;
+}
+
+.cell.correct, .key.correct {
+    background-color: var(--color-correct);
+    border-color: var(--color-correct);
+    color: white;
+}
+
+.cell.present, .key.present {
+    background-color: var(--color-present);
+    border-color: var(--color-present);
+    color: white;
+}
+
+.cell.absent, .key.absent {
+    background-color: var(--color-absent);
+    border-color: var(--color-absent);
+    color: white;
+}
+
+.keyboard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 500px;
+}
+
+.key-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.key {
+    background-color: #818384; 
+    color: var(--text-color);
+    border: none;
+    border-radius: 4px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    flex: 1; 
+    height: 58px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+.key:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+}
+
+.key:active {
+    transform: scale(0.95);
+}
+
+.wide-key {
+    flex: 1.5;
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    main {
+        flex-direction: column; 
+        gap: 30px; 
     }
 
-    function getTodayDate() {
-        const tzoffset = (new Date()).getTimezoneOffset() * 60000;
-        return (new Date(Date.now() - tzoffset)).toISOString().split('T')[0];
+    :root {
+        --cell-size: 50px;
+        --gap-size: 4px;
     }
+}
 
-    function getDeterministicWord(dateObj, wordList) {
-        const tzoffset = dateObj.getTimezoneOffset() * 60000;
-        const localDate = new Date(dateObj.getTime() - tzoffset);
-        const epochDays = Math.floor(localDate.getTime() / 86400000);
-        return wordList[epochDays % wordList.length];
-    }
+.modal {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px 30px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    margin: auto; 
+}
 
-    function showHistoryPanel() {
-        historyList.innerHTML = "";
-        const today = new Date();
-        
-        for(let i = 1; i <= 5; i++) {
-            let pastDate = new Date();
-            pastDate.setDate(today.getDate() - i);
-            
-            let pastWord = getDeterministicWord(pastDate, currentDictionary);
-            let dateString = pastDate.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-            
-            let li = document.createElement("li");
-            li.innerHTML = `<span class="history-date">${dateString.toUpperCase()}</span> <span class="history-word">${pastWord}</span>`;
-            historyList.appendChild(li);
-        }
-        
-        btnHistoryHeader.classList.remove("hidden");
-        historyModal.showModal();
-    }
+.modal::backdrop {
+    background: rgba(0, 0, 0, 0.8);
+}
 
-    closeHistoryBtn.addEventListener("click", () => historyModal.close());
-    btnHistoryHeader.addEventListener("click", () => showHistoryPanel());
+.form-group {
+    margin: 20px 0;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
 
-    function saveGameState() {
-        const boardState = [];
-        for (let r = 0; r < numRows; r++) {
-            let rowString = "";
-            for (let c = 0; c < numCols; c++) {
-                const cell = document.getElementById(`cell-${r}-${c}`);
-                rowString += cell.textContent || " ";
-            }
-            boardState.push(rowString);
-        }
+.form-group label {
+    font-weight: bold;
+}
 
-        const gameState = {
-            date: getTodayDate(),
-            lang: currentLang,
-            cols: numCols,
-            secret: secretWord,
-            board: boardState,
-            currentRow: currentRow,
-            currentCol: currentCol,
-            gameOver: isGameOver
-        };
-        localStorage.setItem("wordleState", JSON.stringify(gameState));
-    }
+.form-group select, .form-group input {
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background-color: #272729;
+    color: white;
+    font-size: 1rem;
+}
 
-    async function loadGameState() {
-        const saved = JSON.parse(localStorage.getItem("wordleState"));
-        const today = getTodayDate();
+.btn-primary {
+    background-color: var(--color-correct); 
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.2s;
+}
 
-        if (saved && saved.date === today) {
-            currentLang = saved.lang;
-            numCols = saved.cols;
-            secretWord = saved.secret;
-            currentRow = saved.currentRow;
-            currentCol = saved.currentCol;
-            isGameOver = saved.gameOver;
+.btn-primary:hover {
+    background-color: #43703e;
+}
 
-            configModal.close();
-            
-            await fetchDictionary(currentLang, numCols);
-            createBoard();
-            createKeyboard();
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 5px;
+}
 
-            for (let r = 0; r < numRows; r++) {
-                for (let c = 0; c < numCols; c++) {
-                    const char = saved.board[r][c];
-                    if (char !== " ") document.getElementById(`cell-${r}-${c}`).textContent = char;
-                }
-                if (r < currentRow) evaluateSavedRow(r);
-            }
+input[type="range"] {
+    flex-grow: 1;
+    accent-color: var(--color-correct); 
+    cursor: pointer;
+    height: 8px;
+}
 
-            if (isGameOver) {
-                btnHistoryHeader.classList.remove("hidden");
-                announcer.textContent = "Ya has completado el Wordle de hoy.";
-                setTimeout(() => {
-                    alert("Ya has jugado hoy. ¡Vuelve mañana para una nueva palabra!");
-                    showHistoryPanel();
-                }, 500);
-            }
-            return true;
-        }
-        return false;
-    }
-    
-    async function fetchDictionary(lang, cols) {
-        loadingScreen.classList.remove("hidden");
-        try {
-            const response = await fetch(dicUrls[lang]);
-            const textData = await response.text();
-            
-            validWordsSet.clear();
-            currentDictionary = [];
-            const allWords = textData.split('\n');
-            
-            for (let word of allWords) {
-                let cleanWord = word.trim();
-                if (cleanWord.length === cols) {
-                    let normalized = normalizeWord(cleanWord);
-                    validWordsSet.add(normalized);
-                    currentDictionary.push(normalized);
-                }
-            }
+.slider-value {
+    background-color: #3a3a3c;
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    min-width: 20px;
+    text-align: center;
+    color: white;
+}
 
-            if (currentDictionary.length === 0) throw new Error("Diccionario vacío");
-            
-            if (!secretWord) {
-                secretWord = getDeterministicWord(new Date(), currentDictionary);
-                console.log("Palabra secreta de hoy:", secretWord);
-            }
-        } catch (error) {
-            console.error(error);
-            loadingScreen.innerHTML = "<p>Error de conexión. Recarga la página.</p>";
-        } finally {
-            loadingScreen.classList.add("hidden");
-        }
-    }
+#loading-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--border-color);
+    padding: 20px 40px;
+    border-radius: 8px;
+    font-weight: bold;
+    z-index: 100;
+}
 
-    async function initGame() {
-        const hasSavedGame = await loadGameState();
-        if (!hasSavedGame) configModal.showModal(); 
-    }
+.hidden {
+    display: none !important;
+}
 
-    lengthSelect.addEventListener("input", (e) => sliderValue.textContent = e.target.value);
+.history-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+    text-align: left;
+}
 
-    configForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        configModal.close();
+.history-list li {
+    background-color: #272729;
+    margin-bottom: 8px;
+    padding: 12px 15px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    border-left: 4px solid var(--color-correct);
+    align-items: center;
+}
 
-        currentLang = langSelect.value;
-        numCols = parseInt(lengthSelect.value);
-        secretWord = ""; 
-        currentRow = 0;
-        currentCol = 0;
-        isGameOver = false;
-        btnHistoryHeader.classList.add("hidden");
+.history-date {
+    color: #a1a1aa;
+    font-weight: bold;
+}
 
-        board.innerHTML = '';
-        keyboard.innerHTML = '';
+.history-word {
+    font-weight: bold;
+    color: white;
+    letter-spacing: 2px;
+}
 
-        await fetchDictionary(currentLang, numCols);
-        
-        createBoard();
-        createKeyboard();
-        saveGameState(); 
-        
-        announcer.textContent = `Partida iniciada. Palabra de ${numCols} letras.`;
-    });
+.unplayed-word {
+    color: #555555;
+    letter-spacing: 4px;
+}
 
-    function createBoard() {
-        board.innerHTML = '';
-        board.style.gridTemplateColumns = `repeat(${numCols}, minmax(0, var(--cell-size)))`;
-        for (let r = 0; r < numRows; r++) {
-            for (let c = 0; c < numCols; c++) {
-                const cell = document.createElement("div");
-                cell.classList.add("cell");
-                cell.setAttribute("id", `cell-${r}-${c}`);
-                board.appendChild(cell);
-            }
-        }
-    }
+.btn-play-past {
+    background-color: var(--color-present); 
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    transition: background-color 0.2s;
+}
 
-    function createKeyboard() {
-        keyboard.innerHTML = '';
-        const middleRow = currentLang === 'es' ? ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ'] : ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
-        const keyboardLayout = [['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'], middleRow, ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫']];
+.btn-play-past:hover {
+    background-color: #9a862f;
+}
 
-        keyboardLayout.forEach(row => {
-            const rowDiv = document.createElement("div");
-            rowDiv.classList.add("key-row");
-            row.forEach(key => {
-                const button = document.createElement("button");
-                button.textContent = key;
-                button.classList.add("key");
-                button.setAttribute("id", `key-${key}`); 
-                if (key === 'ENTER' || key === '⌫') button.classList.add("wide-key");
-                button.addEventListener("click", () => handleInput(key));
-                rowDiv.appendChild(button);
-            });
-            keyboard.appendChild(rowDiv);
-        });
-    }
+.toast-container {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1000;
+    pointer-events: none;
+}
 
-    function evaluateSavedRow(rowIdx) {
-        let guess = "";
-        for (let c = 0; c < numCols; c++) guess += document.getElementById(`cell-${rowIdx}-${c}`).textContent;
-        applyColors(guess, rowIdx);
-    }
+.toast {
+    background-color: var(--text-color);
+    color: var(--bg-color);
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    animation: fadeInOut 3s forwards;
+    pointer-events: auto;
+}
 
-    function evaluateGuess() {
-        let guess = "";
-        for (let c = 0; c < numCols; c++) guess += document.getElementById(`cell-${currentRow}-${c}`).textContent;
+.toast.shake {
+    animation: shakeToast 0.4s ease;
+}
 
-        if (!validWordsSet.has(guess)) {
-            alert("La palabra no está en el diccionario.");
-            return false;
-        }
+@keyframes shakeToast {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
 
-        const correctCount = applyColors(guess, currentRow);
-
-        if (correctCount === numCols) {
-            isGameOver = true;
-            setTimeout(() => {
-                alert("¡Felicidades! Has adivinado la palabra.");
-                showHistoryPanel();
-            }, 500);
-        } else if (currentRow === numRows - 1) { 
-            isGameOver = true;
-            setTimeout(() => {
-                alert(`¡Oh no! Has perdido. La palabra era: ${secretWord}`);
-                showHistoryPanel();
-            }, 500);
-        }
-
-        saveGameState(); 
-        return true; 
-    }
-
-    function applyColors(guess, rowIdx) {
-        let secretLettersCount = {};
-        for (let char of secretWord) secretLettersCount[char] = (secretLettersCount[char] || 0) + 1;
-
-        let statuses = Array(numCols).fill("absent");
-        let correctCount = 0; 
-
-        for (let i = 0; i < numCols; i++) {
-            if (guess[i] === secretWord[i]) {
-                statuses[i] = "correct";
-                secretLettersCount[guess[i]]--;
-                correctCount++;
-            }
-        }
-
-        for (let i = 0; i < numCols; i++) {
-            if (statuses[i] !== "correct" && secretLettersCount[guess[i]] > 0) {
-                statuses[i] = "present";
-                secretLettersCount[guess[i]]--;
-            }
-        }
-
-        for (let i = 0; i < numCols; i++) {
-            const letter = guess[i];
-            const status = statuses[i];
-            const cell = document.getElementById(`cell-${rowIdx}-${i}`);
-            const keyButton = document.getElementById(`key-${letter}`);
-
-            cell.classList.add(status);
-            
-            if (keyButton) {
-                if (status === "correct") {
-                    keyButton.classList.remove("present", "absent");
-                    keyButton.classList.add("correct");
-                } else if (status === "present" && !keyButton.classList.contains("correct")) {
-                    keyButton.classList.remove("absent");
-                    keyButton.classList.add("present");
-                } else if (status === "absent" && !keyButton.classList.contains("correct") && !keyButton.classList.contains("present")) {
-                    keyButton.classList.add("absent");
-                }
-            }
-        }
-        return correctCount;
-    }
-
-    function handleInput(key) {
-        if (configModal.open || historyModal.open || isGameOver || validWordsSet.size === 0) return; 
-
-        if (key === '⌫' || key === 'Backspace') {
-            if (currentCol > 0) {
-                currentCol--;
-                document.getElementById(`cell-${currentRow}-${currentCol}`).textContent = '';
-                saveGameState(); 
-            }
-            return;
-        }
-
-        if (key === 'ENTER' || key === 'Enter') {
-            if (currentCol === numCols) {
-                if (evaluateGuess()) {
-                    currentRow++;
-                    currentCol = 0;
-                    saveGameState(); 
-                }
-            }
-            return;
-        }
-
-        const isLetter = currentLang === 'es' ? /^[a-zA-ZñÑ]$/.test(key) : /^[a-zA-Z]$/.test(key);
-        if (isLetter && currentCol < numCols && currentRow < numRows) {
-            document.getElementById(`cell-${currentRow}-${currentCol}`).textContent = key.toUpperCase();
-            currentCol++;
-            saveGameState(); 
-        }
-    }
-
-    document.addEventListener("keydown", (e) => handleInput(e.key));
-    initGame();
-});
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(-20px); }
+    10% { opacity: 1; transform: translateY(0); }
+    90% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-20px); }
+}
