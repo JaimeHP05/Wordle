@@ -9,46 +9,83 @@
 <body>
     <header>
         <h1>Wordle</h1>
-        <button id="btn-history" class="hidden" aria-label="Ver histórico">Histórico</button>
+        <div class="header-buttons">
+            <button id="btn-config" aria-label="Configuración">⚙️</button>
+            <button id="btn-history" class="hidden" data-i18n="history_btn">📅 Histórico</button>
+        </div>
     </header>
 
     <dialog id="history-modal" class="modal">
-        <h2>Histórico de Palabras</h2>
-        <p>Palabras de los últimos 5 días (Configuración actual):</p>
-        <ul id="history-list" class="history-list">
-            </ul>
-        <button id="close-history" class="btn-primary">Cerrar</button>
+        <h2 data-i18n="history_title">Histórico de Palabras</h2>
+        <p data-i18n="history_desc">Palabras de los últimos 5 días:</p>
+        <ul id="history-list" class="history-list"></ul>
+        <button id="close-history" class="btn-primary" data-i18n="close">Cerrar</button>
     </dialog>
     
     <main>
         <div id="announcer" aria-live="polite" class="sr-only"></div>
 
         <div id="loading-screen" class="hidden">
-            <p>Descargando diccionario, por favor espera...</p>
+            <p id="loading-text" data-i18n="loading">Descargando diccionario, por favor espera...</p>
         </div>
 
         <div id="game-board" class="board" role="grid" aria-label="Tablero de juego"></div>
         <div id="keyboard" class="keyboard" aria-label="Teclado virtual"></div>
     </main>
 
+    <div id="toast-container" class="toast-container"></div>
+
     <dialog id="config-modal" class="modal">
-        <h2>Configurar Partida</h2>
+        <h2 data-i18n="config_title">Configurar Partida</h2>
         <form id="config-form" method="dialog">
             <div class="form-group">
-                <label for="lang-select">Idioma:</label>
+                <label for="lang-select" data-i18n="lang_label">Idioma:</label>
                 <select id="lang-select">
                     <option value="es">Español</option>
                     <option value="en">Inglés</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="length-select">Número de letras:</label>
+                <label for="length-select" data-i18n="length_label">Número de letras:</label>
                 <div class="slider-container">
                     <input type="range" id="length-select" min="5" max="10" value="5" step="1">
                     <span id="slider-value" class="slider-value">5</span>
                 </div>
             </div>
-            <button type="submit" class="btn-primary">¡Empezar a jugar!</button>
+
+            <hr class="config-divider">
+            <h3 data-i18n="a11y_title">Accesibilidad</h3>
+            
+            <div class="form-group toggle-group">
+                <label for="theme-toggle" data-i18n="theme_label">Modo Claro:</label>
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="form-group toggle-group">
+                <label for="anim-toggle" data-i18n="anim_label">Reducir Animaciones:</label>
+                <label class="switch">
+                    <input type="checkbox" id="anim-toggle">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="form-group toggle-group">
+                <label for="colorblind-toggle" data-i18n="colorblind_label">Alto Contraste:</label>
+                <label class="switch">
+                    <input type="checkbox" id="colorblind-toggle">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+            <div class="form-group toggle-group">
+                <label for="dyslexic-toggle" data-i18n="dyslexic_label">Fuente para Dislexia:</label>
+                <label class="switch">
+                    <input type="checkbox" id="dyslexic-toggle">
+                    <span class="slider round"></span>
+                </label>
+            </div>
+
+            <button type="submit" class="btn-primary" data-i18n="save_play" style="margin-top: 15px;">¡Empezar a jugar!</button>
         </form>
     </dialog>
 
