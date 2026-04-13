@@ -10,23 +10,36 @@
     <header>
         <h1>Wordle</h1>
         <div class="header-buttons">
-            <button id="btn-config" aria-label="Configuración">⚙️</button>
-            <button id="btn-history" class="hidden" data-i18n="history_btn">📅 Histórico</button>
+            <button id="btn-config" class="icon-btn" aria-label="Configuración">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+            <button id="btn-history" class="icon-btn hidden" aria-label="Ver histórico">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+            </button>
         </div>
     </header>
 
     <dialog id="history-modal" class="modal">
-        <h2 data-i18n="history_title">Histórico de Palabras</h2>
-        <p data-i18n="history_desc">Palabras de los últimos 5 días:</p>
-        <ul id="history-list" class="history-list"></ul>
-        <button id="close-history" class="btn-primary" data-i18n="close">Cerrar</button>
+        <h2>Histórico de Palabras</h2>
+        <p>Palabras de los últimos 5 días (Configuración actual):</p>
+        <ul id="history-list" class="history-list">
+        </ul>
+        <button id="close-history" class="btn-primary">Cerrar</button>
     </dialog>
     
     <main>
         <div id="announcer" aria-live="polite" class="sr-only"></div>
 
         <div id="loading-screen" class="hidden">
-            <p id="loading-text" data-i18n="loading">Descargando diccionario, por favor espera...</p>
+            <p>Descargando diccionario, por favor espera...</p>
         </div>
 
         <div id="game-board" class="board" role="grid" aria-label="Tablero de juego"></div>
@@ -36,56 +49,23 @@
     <div id="toast-container" class="toast-container"></div>
 
     <dialog id="config-modal" class="modal">
-        <h2 data-i18n="config_title">Configurar Partida</h2>
+        <h2>Configurar Partida</h2>
         <form id="config-form" method="dialog">
             <div class="form-group">
-                <label for="lang-select" data-i18n="lang_label">Idioma:</label>
+                <label for="lang-select">Idioma:</label>
                 <select id="lang-select">
                     <option value="es">Español</option>
                     <option value="en">Inglés</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="length-select" data-i18n="length_label">Número de letras:</label>
+                <label for="length-select">Número de letras:</label>
                 <div class="slider-container">
                     <input type="range" id="length-select" min="5" max="10" value="5" step="1">
                     <span id="slider-value" class="slider-value">5</span>
                 </div>
             </div>
-
-            <hr class="config-divider">
-            <h3 data-i18n="a11y_title">Accesibilidad</h3>
-            
-            <div class="form-group toggle-group">
-                <label for="theme-toggle" data-i18n="theme_label">Modo Claro:</label>
-                <label class="switch">
-                    <input type="checkbox" id="theme-toggle">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-            <div class="form-group toggle-group">
-                <label for="anim-toggle" data-i18n="anim_label">Reducir Animaciones:</label>
-                <label class="switch">
-                    <input type="checkbox" id="anim-toggle">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-            <div class="form-group toggle-group">
-                <label for="colorblind-toggle" data-i18n="colorblind_label">Alto Contraste:</label>
-                <label class="switch">
-                    <input type="checkbox" id="colorblind-toggle">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-            <div class="form-group toggle-group">
-                <label for="dyslexic-toggle" data-i18n="dyslexic_label">Fuente para Dislexia:</label>
-                <label class="switch">
-                    <input type="checkbox" id="dyslexic-toggle">
-                    <span class="slider round"></span>
-                </label>
-            </div>
-
-            <button type="submit" class="btn-primary" data-i18n="save_play" style="margin-top: 15px;">¡Empezar a jugar!</button>
+            <button type="submit" class="btn-primary">¡Empezar a jugar!</button>
         </form>
     </dialog>
 
