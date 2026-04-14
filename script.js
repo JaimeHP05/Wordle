@@ -43,7 +43,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function getDeterministicRandom(seed) {
-        let t = seed += 0x6D2B79F5;
+        let t = seed;
+        t += 0x6D2B79F5;
         t = Math.imul(t ^ t >>> 15, t | 1);
         t ^= t + Math.imul(t ^ t >>> 7, t | 61);
         return ((t ^ t >>> 14) >>> 0) / 4294967296;
@@ -57,7 +58,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function showToast(message) {
-        const existingToast = Array.from(toastContainer.children).find(t => t.textContent.includes(message));
+        const existingToast = Array.from(toastContainer.children).find((t) => {
+            return t.textContent.includes(message);
+        });
         
         if (existingToast) {
             existingToast.classList.remove("shake");
