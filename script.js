@@ -17,6 +17,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const historyList = document.getElementById("history-list");
     const btnConfigHeader = document.getElementById("btn-config");
 
+    const authModal = document.getElementById("auth-modal");
+    const btnLoginModal = document.getElementById("btn-login-modal");
+    const closeAuthBtn = document.getElementById("close-auth");
+    const userMenu = document.getElementById("user-menu");
+    const userGreeting = document.getElementById("user-greeting");
+    const btnLogout = document.getElementById("btn-logout");
+    
+    const tabLogin = document.getElementById("tab-login");
+    const tabRegister = document.getElementById("tab-register");
+    const formLogin = document.getElementById("form-login");
+    const formRegister = document.getElementById("form-register");
+    const loginError = document.getElementById("login-error");
+    const regError = document.getElementById("reg-error");
+
+    const API_URL = "http://localhost:3000/api";
+
     const numRows = 6;
     let numCols = 5; 
     let currentLang = 'es'; 
@@ -27,11 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
     let isGameOver = false;
     let validWordsSet = new Set(); 
     let currentDictionary = []; 
-
-    const dicUrls = {
-        es: "https://raw.githubusercontent.com/javierarce/palabras/master/listado-general.txt",
-        en: "https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt"
-    };
 
     function normalizeWord(word) {
         return word.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
@@ -80,6 +91,112 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 3000); 
     }
 
+    function checkSession() {
+        const activeUser = JSON.parse(localStorage.getItem("wordleActiveUser"));
+        if (activeUser) {
+            btnLoginModal.classList.add("hidden");
+            userMenu.classList.remove("hidden");
+            userGreeting.textContent = "Hola, " + activeUser.username;
+        } else {
+            btnLoginModal.classList.remove("hidden");
+            userMenu.classList.add("hidden");
+        }
+    }
+
+    tabLogin.addEventListener("click", () => {
+        tabLogin.classList.add("active");
+        tabRegister.classList.remove("active");
+        formLogin.classList.remove("hidden");
+        formRegister.classList.add("hidden");
+        loginError.classList.add("hidden");
+    });
+    
+    tabRegister.addEventListener("click", () => {
+        tabRegister.classList.add("active");
+        tabLogin.classList.remove("active");
+        formRegister.classList.remove("hidden");
+        formLogin.classList.add("hidden");
+        regError.classList.add("hidden");
+    });
+
+    btnLoginModal.addEventListener("click", () => {
+        authModal.showModal();
+    });
+    
+    closeAuthBtn.addEventListener("click", () => {
+        authModal.close();
+    });
+    
+    btnLogout.addEventListener("click", () => {
+        localStorage.removeItem("wordleActiveUser");
+        checkSession();
+        showToast("Sesión cerrada.");
+    });
+
+    formRegister.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const user = document.getElementById("reg-user").value.trim();
+        const email = document.getElementById("reg-email").value.trim();
+        const pass = document.getElementById("reg-password").value;
+
+        const passRegex = /^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\w\W]{8,}$/;
+        if (!passRegex.test(pass)) {
+            regError.textContent = "Mín. 8 caracteres, 1 mayúscula y 1 número.";
+            regError.classList.remove("hidden");
+            return;
+        }
+
+        try {
+            const response = await fetch(API_URL + "/register", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, email: email, password: pass })
+            });
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error);
+            }
+
+            localStorage.setItem("wordleActiveUser", JSON.stringify(data.user));
+            authModal.close();
+            checkSession();
+            formRegister.reset();
+            showToast("¡Registro completado!");
+        } catch (error) {
+            regError.textContent = error.message;
+            regError.classList.remove("hidden");
+        }
+    });
+
+    formLogin.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("login-email").value.trim();
+        const pass = document.getElementById("login-password").value;
+
+        try {
+            const response = await fetch(API_URL + "/login", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, password: pass })
+            });
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error);
+            }
+
+            localStorage.setItem("wordleActiveUser", JSON.stringify(data.user));
+            authModal.close();
+            checkSession();
+            formLogin.reset();
+            showToast("Sesión iniciada");
+        } catch (error) {
+            loginError.textContent = error.message;
+            loginError.classList.remove("hidden");
+        }
+    });
+
     function showHistoryPanel() {
         historyList.innerHTML = "";
         const today = new Date();
@@ -92,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let dateString = pastDate.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
             
             let li = document.createElement("li");
-            li.innerHTML = `<span class="history-date">${dateString.toUpperCase()}</span> <span class="history-word">${pastWord}</span>`;
+            li.innerHTML = "<span class=\"history-date\">" + dateString.toUpperCase() + "</span> <span class=\"history-word\">" + pastWord + "</span>";
             historyList.appendChild(li);
         }
         
@@ -117,7 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
         for (let r = 0; r < numRows; r++) {
             let rowString = "";
             for (let c = 0; c < numCols; c++) {
-                const cell = document.getElementById(`cell-${r}-${c}`);
+                const cell = document.getElementById("cell-" + r + "-" + c);
                 if (cell.textContent) {
                     rowString += cell.textContent;
                 } else {
@@ -162,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 for (let c = 0; c < numCols; c++) {
                     const char = saved.board[r][c];
                     if (char !== " ") {
-                        document.getElementById(`cell-${r}-${c}`).textContent = char;
+                        document.getElementById("cell-" + r + "-" + c).textContent = char;
                     }
                 }
                 if (r < currentRow) {
@@ -186,7 +303,14 @@ document.addEventListener("DOMContentLoaded", () => {
     async function fetchDictionary(lang, cols) {
         loadingScreen.classList.remove("hidden");
         try {
-            const response = await fetch(dicUrls[lang]);
+            let url = "";
+            if (lang === 'es') {
+                url = "https://raw.githubusercontent.com/javierarce/palabras/master/listado-general.txt";
+            } else {
+                url = "https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt";
+            }
+
+            const response = await fetch(url);
             const textData = await response.text();
             
             validWordsSet.clear();
@@ -250,17 +374,17 @@ document.addEventListener("DOMContentLoaded", () => {
         createKeyboard();
         saveGameState(); 
         
-        announcer.textContent = `Partida iniciada. Palabra de ${numCols} letras.`;
+        announcer.textContent = "Partida iniciada. Palabra de " + numCols + " letras.";
     });
 
     function createBoard() {
         board.innerHTML = '';
-        board.style.gridTemplateColumns = `repeat(${numCols}, minmax(0, var(--cell-size)))`;
+        board.style.gridTemplateColumns = "repeat(" + numCols + ", minmax(0, var(--cell-size)))";
         for (let r = 0; r < numRows; r++) {
             for (let c = 0; c < numCols; c++) {
                 const cell = document.createElement("div");
                 cell.classList.add("cell");
-                cell.setAttribute("id", `cell-${r}-${c}`);
+                cell.setAttribute("id", "cell-" + r + "-" + c);
                 board.appendChild(cell);
             }
         }
@@ -289,7 +413,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const button = document.createElement("button");
                 button.textContent = key;
                 button.classList.add("key");
-                button.setAttribute("id", `key-${key}`); 
+                button.setAttribute("id", "key-" + key); 
                 if (key === 'ENTER' || key === '⌫') {
                     button.classList.add("wide-key");
                 }
@@ -305,7 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function evaluateSavedRow(rowIdx) {
         let guess = "";
         for (let c = 0; c < numCols; c++) {
-            guess += document.getElementById(`cell-${rowIdx}-${c}`).textContent;
+            guess += document.getElementById("cell-" + rowIdx + "-" + c).textContent;
         }
         applyColors(guess, rowIdx);
     }
@@ -313,7 +437,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function evaluateGuess() {
         let guess = "";
         for (let c = 0; c < numCols; c++) {
-            guess += document.getElementById(`cell-${currentRow}-${c}`).textContent;
+            guess += document.getElementById("cell-" + currentRow + "-" + c).textContent;
         }
 
         if (!validWordsSet.has(guess)) {
@@ -332,7 +456,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else if (currentRow === numRows - 1) { 
             isGameOver = true;
             setTimeout(() => {
-                showToast(`¡Oh no! Has perdido. La palabra era: ${secretWord}`);
+                showToast("¡Oh no! Has perdido. La palabra era: " + secretWord);
                 showHistoryPanel();
             }, 500);
         }
@@ -378,8 +502,8 @@ document.addEventListener("DOMContentLoaded", () => {
         for (let i = 0; i < numCols; i++) {
             const letter = guess[i];
             const status = statuses[i];
-            const cell = document.getElementById(`cell-${rowIdx}-${i}`);
-            const keyButton = document.getElementById(`key-${letter}`);
+            const cell = document.getElementById("cell-" + rowIdx + "-" + i);
+            const keyButton = document.getElementById("key-" + letter);
 
             cell.classList.add(status);
             
@@ -405,14 +529,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function handleInput(key) {
-        if (configModal.open || historyModal.open || isGameOver || validWordsSet.size === 0) {
+        if (configModal.open || historyModal.open || authModal.open || isGameOver || validWordsSet.size === 0) {
             return;
         }
 
         if (key === '⌫' || key === 'Backspace') {
             if (currentCol > 0) {
                 currentCol--;
-                document.getElementById(`cell-${currentRow}-${currentCol}`).textContent = '';
+                document.getElementById("cell-" + currentRow + "-" + currentCol).textContent = '';
                 saveGameState(); 
             }
             return;
@@ -439,7 +563,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isLetter) {
             if (currentCol < numCols) {
                 if (currentRow < numRows) {
-                    document.getElementById(`cell-${currentRow}-${currentCol}`).textContent = key.toUpperCase();
+                    document.getElementById("cell-" + currentRow + "-" + currentCol).textContent = key.toUpperCase();
                     currentCol++;
                     saveGameState(); 
                 }
@@ -452,4 +576,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     
     initGame();
+    checkSession();
 });
