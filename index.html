@@ -8,8 +8,23 @@
 </head>
 <body>
     <header>
+        <div class="header-left">
+            <div id="user-menu" class="hidden">
+                <span id="user-greeting"></span>
+                <button id="btn-logout" aria-label="Cerrar Sesión">Salir</button>
+            </div>
+            
+            <button id="btn-login-modal" aria-label="Usuario" class="icon-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </button>
+        </div>
+
         <h1>Wordle</h1>
-        <div class="header-buttons">
+
+        <div class="header-right">
             <button id="btn-config" class="icon-btn" aria-label="Configuración">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="3"></circle>
@@ -26,6 +41,44 @@
             </button>
         </div>
     </header>
+
+    <dialog id="auth-modal" class="modal">
+        <div class="auth-tabs">
+            <button id="tab-login" class="auth-tab active">Iniciar Sesión</button>
+            <button id="tab-register" class="auth-tab">Registrarse</button>
+        </div>
+
+        <form id="form-login" method="dialog">
+            <div class="form-group">
+                <label for="login-email">Email:</label>
+                <input type="email" id="login-email" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Contraseña:</label>
+                <input type="password" id="login-password" required>
+            </div>
+            <p id="login-error" class="error-msg hidden"></p>
+            <button type="submit" class="btn-primary">Entrar</button>
+        </form>
+
+        <form id="form-register" class="hidden" method="dialog">
+            <div class="form-group">
+                <label for="reg-user">Usuario:</label>
+                <input type="text" id="reg-user" required minlength="3">
+            </div>
+            <div class="form-group">
+                <label for="reg-email">Email:</label>
+                <input type="email" id="reg-email" required>
+            </div>
+            <div class="form-group">
+                <label for="reg-password">Contraseña:</label>
+                <input type="password" id="reg-password" required placeholder="Mín. 8 chars, 1 mayús, 1 num">
+            </div>
+            <p id="reg-error" class="error-msg hidden"></p>
+            <button type="submit" class="btn-primary">Crear Cuenta</button>
+        </form>
+        <button id="close-auth" class="btn-secondary" style="margin-top: 10px;">Cancelar</button>
+    </dialog>
 
     <dialog id="history-modal" class="modal">
         <h2>Histórico de Palabras</h2>
