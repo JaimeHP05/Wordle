@@ -22,19 +22,34 @@ body {
 
 header {
     width: 100%;
-    display: flex;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr; 
     align-items: center;
-    position: relative;
     border-bottom: 1px solid var(--border-color);
-    padding: 10px 0;
+    padding: 10px 20px;
     margin-bottom: 30px;
+    box-sizing: border-box;
 }
 
-.header-buttons {
-    position: absolute;
-    right: 20px;
+header h1 {
+    grid-column: 2; 
+    margin: 0;
+    text-align: center;
+}
+
+.header-left {
+    grid-column: 1;
     display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-right {
+    grid-column: 3;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
     gap: 10px;
 }
 
@@ -57,6 +72,12 @@ header {
 
 .icon-btn:active {
     transform: scale(0.9);
+}
+
+.icon-btn svg {
+    width: 24px;
+    height: 24px;
+    pointer-events: none;
 }
 
 main {
@@ -183,6 +204,16 @@ main {
     :root {
         --cell-size: 50px;
         --gap-size: 4px;
+    }
+}
+
+@media (max-width: 450px) {
+    .icon-btn {
+        padding: 6px;
+    }
+    .icon-btn svg {
+        width: 20px;
+        height: 20px;
     }
 }
 
@@ -371,4 +402,76 @@ input[type="range"] {
     10% { opacity: 1; transform: translateY(0); }
     90% { opacity: 1; transform: translateY(0); }
     100% { opacity: 0; transform: translateY(-20px); }
+}
+
+#user-menu {
+    display: flex; 
+    align-items: center; 
+    gap: 10px;
+    background-color: #272729; 
+    padding: 4px 12px;
+    border-radius: 20px; 
+    border: 1px solid var(--border-color);
+}
+
+#user-greeting { 
+    font-size: 0.9rem; 
+    font-weight: bold; 
+    color: var(--color-correct); 
+}
+
+#btn-logout { 
+    background: none; 
+    border: none; 
+    color: #a1a1aa; 
+    cursor: pointer; 
+    text-decoration: underline; 
+}
+
+#btn-logout:hover { 
+    color: white; 
+}
+
+.auth-tabs { 
+    display: flex; 
+    margin-bottom: 20px; 
+    border-bottom: 2px solid var(--border-color); 
+}
+
+.auth-tab { 
+    flex: 1; 
+    background: none; 
+    border: none; 
+    color: #a1a1aa; 
+    padding: 10px; 
+    font-size: 1.1rem; 
+    cursor: pointer; 
+    font-weight: bold; 
+}
+
+.auth-tab.active { 
+    color: white; 
+    border-bottom: 3px solid var(--color-correct); 
+}
+
+.error-msg { 
+    color: #e57373; 
+    font-size: 0.85rem; 
+    margin-top: -10px; 
+    margin-bottom: 10px; 
+    text-align: left; 
+}
+
+.btn-secondary { 
+    background-color: transparent; 
+    color: white; 
+    border: 1px solid var(--border-color); 
+    padding: 8px 16px; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    width: 100%; 
+}
+
+.btn-secondary:hover { 
+    background-color: #272729; 
 }
