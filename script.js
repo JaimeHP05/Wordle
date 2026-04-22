@@ -31,16 +31,41 @@ document.addEventListener("DOMContentLoaded", () => {
     const loginError = document.getElementById("login-error");
     const regError = document.getElementById("reg-error");
 
-    const API_URL = "http://localhost:3000/api";
+    const btnStats = document.getElementById("btn-stats");
+    const statsModal = document.getElementById("stats-modal");
+    const closeStatsBtn = document.getElementById("close-stats");
+    const tabMystats = document.getElementById("tab-mystats");
+    const tabRanking = document.getElementById("tab-ranking");
+    const mystatsView = document.getElementById("mystats-view");
+    const rankingView = document.getElementById("ranking-view");
+
+    const btnToggleBlog = document.getElementById("btn-toggle-blog");
+    const blogPanel = document.getElementById("blog-panel");
+    const btnCloseBlogMobile = document.getElementById("btn-close-blog");
+    const blogMessages = document.getElementById("blog-messages");
+    const blogForm = document.getElementById("blog-form");
+    const blogInput = document.getElementById("blog-input");
+    const btnSendBlog = document.getElementById("btn-send-blog");
+
+    let serverIP = window.location.hostname;
+    if (window.location.hostname === "") {
+        serverIP = "localhost";
+    }
+    if (window.location.hostname === "localhost") {
+        serverIP = "localhost";
+    }
+    const API_URL = "http://" + serverIP + ":3000/api";
 
     const numRows = 6;
     let numCols = 5; 
-    let currentLang = 'es'; 
+    let currentLang = "es"; 
     let currentRow = 0;
     let currentCol = 0;
     
+    let currentGameDate = ""; 
     let secretWord = ""; 
     let isGameOver = false;
+    let gameStartTime = 0; 
     let validWordsSet = new Set(); 
     let currentDictionary = []; 
 
@@ -50,7 +75,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function getTodayDate() {
         const tzoffset = (new Date()).getTimezoneOffset() * 60000;
-        return (new Date(Date.now() - tzoffset)).toISOString().split('T')[0];
+        return (new Date(Date.now() - tzoffset)).toISOString().split("T")[0];
+    }
+
+    function getStateKey(dateStr) {
+        const activeUser = JSON.parse(localStorage.getItem("wordleActiveUser"));
+        let userIdentifier = "invitado";
+        if (activeUser) {
+            userIdentifier = activeUser.email;
+        }
+        return userIdentifier + "-" + dateStr + "-" + currentLang + "-" + numCols;
     }
 
     function getDeterministicRandom(seed) {
@@ -65,7 +99,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const tzoffset = dateObj.getTimezoneOffset() * 60000;
         const localDate = new Date(dateObj.getTime() - tzoffset);
         const epochDays = Math.floor(localDate.getTime() / 86400000);
-        return wordList[epochDays % wordList.length];
+        const seed = epochDays + wordList.length; 
+        const randomFraction = getDeterministicRandom(seed);
+        const randomIndex = Math.floor(randomFraction * wordList.length);
+        return wordList[randomIndex];
     }
 
     function showToast(message) {
@@ -91,15 +128,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 3000); 
     }
 
+    function stringToColor(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const hue = Math.abs(hash % 360);
+        return "hsl(" + hue + ", 75%, 65%)"; 
+    }
+
     function checkSession() {
         const activeUser = JSON.parse(localStorage.getItem("wordleActiveUser"));
         if (activeUser) {
             btnLoginModal.classList.add("hidden");
             userMenu.classList.remove("hidden");
             userGreeting.textContent = "Hola, " + activeUser.username;
+            btnStats.classList.remove("hidden"); 
+            blogInput.disabled = false;
+            btnSendBlog.disabled = false;
+            blogInput.placeholder = "Escribe un mensaje...";
         } else {
             btnLoginModal.classList.remove("hidden");
             userMenu.classList.add("hidden");
+            btnStats.classList.add("hidden"); 
+            blogInput.disabled = true;
+            btnSendBlog.disabled = true;
+            blogInput.placeholder = "Inicia sesión para escribir...";
         }
     }
 
@@ -131,6 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.removeItem("wordleActiveUser");
         checkSession();
         showToast("Sesión cerrada.");
+        startNewGameForDate(getFormattedDate(new Date()));
     });
 
     formRegister.addEventListener("submit", async (e) => {
@@ -148,8 +203,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
             const response = await fetch(API_URL + "/register", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ username: user, email: email, password: pass })
             });
             const data = await response.json();
@@ -162,7 +217,8 @@ document.addEventListener("DOMContentLoaded", () => {
             authModal.close();
             checkSession();
             formRegister.reset();
-            showToast("¡Registro completado!");
+            showToast("¡Cuenta creada con éxito!");
+            startNewGameForDate(getFormattedDate(new Date()));
         } catch (error) {
             regError.textContent = error.message;
             regError.classList.remove("hidden");
@@ -176,8 +232,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
             const response = await fetch(API_URL + "/login", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: email, password: pass })
             });
             const data = await response.json();
@@ -191,30 +247,287 @@ document.addEventListener("DOMContentLoaded", () => {
             checkSession();
             formLogin.reset();
             showToast("Sesión iniciada");
+            startNewGameForDate(getFormattedDate(new Date()));
         } catch (error) {
             loginError.textContent = error.message;
             loginError.classList.remove("hidden");
         }
     });
 
+    tabMystats.addEventListener("click", () => {
+        tabMystats.classList.add("active");
+        tabRanking.classList.remove("active");
+        mystatsView.classList.remove("hidden");
+        rankingView.classList.add("hidden");
+    });
+    
+    tabRanking.addEventListener("click", () => {
+        tabRanking.classList.add("active");
+        tabMystats.classList.remove("active");
+        rankingView.classList.remove("hidden");
+        mystatsView.classList.add("hidden");
+        loadRanking();
+    });
+
+    btnStats.addEventListener("click", async () => {
+        statsModal.showModal();
+        await loadMyStats();
+    });
+    
+    closeStatsBtn.addEventListener("click", () => {
+        statsModal.close();
+    });
+
+    async function loadMyStats() {
+        const activeUser = JSON.parse(localStorage.getItem("wordleActiveUser"));
+        if (!activeUser) {
+            return;
+        }
+        
+        try {
+            const res = await fetch(API_URL + "/stats/" + activeUser.email);
+            const data = await res.json();
+            
+            document.getElementById("stat-played").textContent = data.played;
+            let winPct = 0;
+            if (data.played > 0) {
+                winPct = Math.round((data.wins / data.played) * 100);
+            }
+            document.getElementById("stat-winpct").textContent = winPct + "%";
+
+            const distContainer = document.getElementById("stat-distribution");
+            distContainer.innerHTML = "";
+            
+            let maxVal = 1;
+            for (let i = 1; i <= numRows; i++) {
+                if (data.distribution[i] > maxVal) {
+                    maxVal = data.distribution[i];
+                }
+            }
+
+            for (let i = 1; i <= numRows; i++) {
+                let count = 0;
+                if (data.distribution[i]) {
+                    count = data.distribution[i];
+                }
+                
+                let widthPct = 7;
+                if (count > 0) {
+                    widthPct = Math.round((count / maxVal) * 100);
+                }
+                if (widthPct < 7) {
+                    widthPct = 7;
+                }
+                
+                let highlightClass = "";
+                if (count > 0) {
+                    highlightClass = "highlight";
+                }
+                
+                distContainer.innerHTML += "<div class=\"stat-row\">" +
+                    "<span>" + i + "</span>" +
+                    "<div class=\"stat-bar " + highlightClass + "\" style=\"width: " + widthPct + "%;\">" + count + "</div>" +
+                "</div>";
+            }
+        } catch (e) {
+            console.error("Error stats", e);
+        }
+    }
+
+    async function loadRanking() {
+        try {
+            const res = await fetch(API_URL + "/ranking");
+            const data = await res.json();
+            const tbody = document.getElementById("ranking-body");
+            tbody.innerHTML = "";
+            
+            data.forEach((player, index) => {
+                tbody.innerHTML += "<tr>" +
+                    "<td>" + (index + 1) + "</td>" +
+                    "<td>" + player.username + "</td>" +
+                    "<td>" + player.avg_attempts.toFixed(0) + "</td>" +
+                    "<td>" + player.avg_time.toFixed(2) + "s</td>" +
+                "</tr>";
+            });
+        } catch (e) {
+            console.error("Error ranking", e);
+        }
+    }
+
+    async function saveGameToDatabase(won, attempts) {
+        const activeUser = JSON.parse(localStorage.getItem("wordleActiveUser"));
+        if (!activeUser) {
+            return; 
+        }
+
+        const timeSpentSeconds = (Date.now() - gameStartTime) / 1000;
+        
+        try {
+            const res = await fetch(API_URL + "/save-game", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    email: activeUser.email, 
+                    dateStr: currentGameDate, 
+                    won: won, 
+                    attempts: attempts, 
+                    time_seconds: timeSpentSeconds 
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error);
+            }
+        } catch (error) { 
+            console.error(error); 
+        }
+    }
+
+    async function loadBlogMessages() {
+        try {
+            const res = await fetch(API_URL + "/blog");
+            const messages = await res.json();
+            blogMessages.innerHTML = "";
+            
+            messages.reverse().forEach((msg) => {
+                const date = new Date(msg.timestamp + "Z");
+                
+                let min = date.getMinutes();
+                if (min < 10) {
+                    min = "0" + min;
+                }
+                const dateString = date.getHours() + ":" + min;
+                
+                const msgDiv = document.createElement("div");
+                msgDiv.classList.add("blog-msg");
+                
+                const contentDiv = document.createElement("div");
+                contentDiv.style.whiteSpace = "pre-wrap"; 
+                contentDiv.textContent = msg.message;
+
+                const headerDiv = document.createElement("div");
+                headerDiv.classList.add("blog-msg-header");
+                
+                const authorSpan = document.createElement("span");
+                authorSpan.classList.add("blog-msg-author");
+                authorSpan.style.color = stringToColor(msg.username);
+                authorSpan.textContent = msg.username;
+                
+                const timeSpan = document.createElement("span");
+                timeSpan.textContent = dateString;
+                
+                headerDiv.appendChild(authorSpan);
+                headerDiv.appendChild(timeSpan);
+                
+                msgDiv.appendChild(headerDiv);
+                msgDiv.appendChild(contentDiv);
+                
+                blogMessages.appendChild(msgDiv);
+            });
+            
+            blogMessages.scrollTop = blogMessages.scrollHeight;
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    btnToggleBlog.addEventListener("click", () => {
+        blogPanel.classList.toggle("active");
+        if (blogPanel.classList.contains("active")) {
+            loadBlogMessages();
+        }
+    });
+
+    btnCloseBlogMobile.addEventListener("click", () => {
+        blogPanel.classList.remove("active");
+    });
+
+    blogForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const activeUser = JSON.parse(localStorage.getItem("wordleActiveUser"));
+        
+        if (!activeUser) {
+            return;
+        }
+        
+        const text = blogInput.value.trim();
+        
+        if (!text) {
+            return;
+        }
+
+        try {
+            btnSendBlog.disabled = true;
+            const res = await fetch(API_URL + "/blog", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username: activeUser.username, message: text })
+            });
+            
+            if (!res.ok) {
+                throw new Error("Error");
+            }
+            
+            blogInput.value = "";
+            await loadBlogMessages(); 
+        } catch (e) {
+            showToast("No se pudo enviar");
+        } finally {
+            btnSendBlog.disabled = false;
+            blogInput.focus();
+        }
+    });
+
+    blogInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            if (!e.shiftKey) {
+                e.preventDefault(); 
+                blogForm.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+            }
+        }
+    });
+
+    function saveToArchive(dateStr) {
+        let archive = JSON.parse(localStorage.getItem("wordleArchive"));
+        if (!archive) {
+            archive = {};
+        }
+        archive[getStateKey(dateStr)] = true; 
+        localStorage.setItem("wordleArchive", JSON.stringify(archive));
+    }
+
     function showHistoryPanel() {
         historyList.innerHTML = "";
         const today = new Date();
+        let archive = JSON.parse(localStorage.getItem("wordleArchive"));
+        if (!archive) {
+            archive = {};
+        }
         
         for (let i = 1; i <= 5; i++) {
             let pastDate = new Date();
             pastDate.setDate(today.getDate() - i);
-            
+            let dateKey = getFormattedDate(pastDate);
             let pastWord = getDeterministicWord(pastDate, currentDictionary);
             let dateString = pastDate.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-            
             let li = document.createElement("li");
-            li.innerHTML = "<span class=\"history-date\">" + dateString.toUpperCase() + "</span> <span class=\"history-word\">" + pastWord + "</span>";
+            
+            if (archive[getStateKey(dateKey)]) {
+                li.innerHTML = "<span class=\"history-date\">" + dateString.toUpperCase() + "</span> <span class=\"history-word\">" + pastWord + "</span>";
+            } else {
+                li.innerHTML = "<span class=\"history-date\">" + dateString.toUpperCase() + "</span> <span class=\"history-word unplayed-word\">?????</span> <button class=\"btn-play-past\" data-date=\"" + dateKey + "\">Jugar</button>";
+            }
             historyList.appendChild(li);
         }
         
-        btnHistoryHeader.classList.remove("hidden");
-        historyModal.showModal();
+        const playButtons = document.querySelectorAll(".btn-play-past");
+        for (let i = 0; i < playButtons.length; i++) {
+            playButtons[i].addEventListener("click", (e) => {
+                startNewGameForDate(e.target.getAttribute("data-date"));
+            });
+        }
+        btnHistoryHeader.classList.remove("hidden"); 
+        historyModal.showModal(); 
     }
 
     closeHistoryBtn.addEventListener("click", () => {
@@ -243,79 +556,118 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             boardState.push(rowString);
         }
-
-        const gameState = {
-            date: getTodayDate(),
-            lang: currentLang,
-            cols: numCols,
-            secret: secretWord,
-            board: boardState,
-            currentRow: currentRow,
-            currentCol: currentCol,
+        
+        let states = JSON.parse(localStorage.getItem("wordleStates"));
+        if (!states) {
+            states = {};
+        }
+        
+        states[getStateKey(currentGameDate)] = {
+            lang: currentLang, 
+            cols: numCols, 
+            secret: secretWord, 
+            board: boardState, 
+            currentRow: currentRow, 
+            currentCol: currentCol, 
             gameOver: isGameOver
         };
-        localStorage.setItem("wordleState", JSON.stringify(gameState));
+        localStorage.setItem("wordleStates", JSON.stringify(states));
     }
 
-    async function loadGameState() {
-        const saved = JSON.parse(localStorage.getItem("wordleState"));
-        const today = getTodayDate();
+    function startNewGameForDate(dateStr) {
+        currentGameDate = dateStr;
+        const parts = dateStr.split("-");
+        const localDate = new Date(parts[0], parts[1] - 1, parts[2]); 
+        secretWord = getDeterministicWord(localDate, currentDictionary);
+        currentRow = 0; 
+        currentCol = 0; 
+        isGameOver = false;
+        gameStartTime = Date.now(); 
 
-        if (saved && saved.date === today) {
-            currentLang = saved.lang;
-            numCols = saved.cols;
-            secretWord = saved.secret;
-            currentRow = saved.currentRow;
-            currentCol = saved.currentCol;
-            isGameOver = saved.gameOver;
+        board.innerHTML = ""; 
+        keyboard.innerHTML = "";
+        createBoard(); 
+        createKeyboard();
 
-            configModal.close();
-            
-            await fetchDictionary(currentLang, numCols);
-            createBoard();
-            createKeyboard();
-
-            for (let r = 0; r < numRows; r++) {
-                for (let c = 0; c < numCols; c++) {
-                    const char = saved.board[r][c];
-                    if (char !== " ") {
-                        document.getElementById("cell-" + r + "-" + c).textContent = char;
+        let states = JSON.parse(localStorage.getItem("wordleStates"));
+        if (!states) {
+            states = {};
+        }
+        
+        let saved = states[getStateKey(dateStr)];
+        if (saved) {
+            if (saved.lang === currentLang) {
+                if (saved.cols === numCols) {
+                    currentRow = saved.currentRow; 
+                    currentCol = saved.currentCol; 
+                    isGameOver = saved.gameOver;
+                    
+                    for (let r = 0; r < numRows; r++) {
+                        for (let c = 0; c < numCols; c++) {
+                            const char = saved.board[r][c];
+                            if (char !== " ") {
+                                document.getElementById("cell-" + r + "-" + c).textContent = char;
+                            }
+                        }
+                        if (r < currentRow) {
+                            evaluateSavedRow(r); 
+                        }
                     }
                 }
-                if (r < currentRow) {
-                    evaluateSavedRow(r);
-                }
             }
-
-            if (isGameOver) {
-                btnHistoryHeader.classList.remove("hidden");
-                announcer.textContent = "Ya has completado el Wordle de hoy.";
-                setTimeout(() => {
-                    showToast("Ya has jugado hoy. ¡Vuelve mañana para una nueva palabra!");
-                    showHistoryPanel();
-                }, 500);
-            }
-            return true;
         }
-        return false;
+        
+        historyModal.close();
+        
+        const todayStr = getFormattedDate(new Date());
+        let archive = JSON.parse(localStorage.getItem("wordleArchive"));
+        if (!archive) {
+            archive = {};
+        }
+        
+        if (archive[getStateKey(todayStr)]) {
+            btnHistoryHeader.classList.remove("hidden");
+        } else {
+            btnHistoryHeader.classList.add("hidden");
+        }
     }
-    
+
+    async function initGame() {
+        const savedConfig = JSON.parse(localStorage.getItem("wordleConfig"));
+        if (savedConfig) {
+            currentLang = savedConfig.lang; 
+            numCols = savedConfig.cols;
+            langSelect.value = currentLang; 
+            lengthSelect.value = numCols; 
+            sliderValue.textContent = numCols;
+            configModal.close();
+            await fetchDictionary(currentLang, numCols);
+            startNewGameForDate(getFormattedDate(new Date()));
+        } else {
+            configModal.showModal(); 
+        }
+    }
+
     async function fetchDictionary(lang, cols) {
         loadingScreen.classList.remove("hidden");
         try {
             let url = "";
-            if (lang === 'es') {
+            if (lang === "es") {
                 url = "https://raw.githubusercontent.com/javierarce/palabras/master/listado-general.txt";
             } else {
                 url = "https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt";
             }
-
-            const response = await fetch(url);
-            const textData = await response.text();
             
-            validWordsSet.clear();
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error("Error en red");
+            }
+            
+            const textData = await response.text();
+            validWordsSet.clear(); 
             currentDictionary = [];
-            const allWords = textData.split('\n');
+            
+            const allWords = textData.split("\n");
             
             for (let i = 0; i < allWords.length; i++) {
                 let cleanWord = allWords[i].trim();
@@ -325,65 +677,36 @@ document.addEventListener("DOMContentLoaded", () => {
                     currentDictionary.push(normalized);
                 }
             }
-
-            if (currentDictionary.length === 0) {
-                throw new Error("Diccionario vacío");
-            }
-            
-            if (secretWord === "") {
-                secretWord = getDeterministicWord(new Date(), currentDictionary);
-                console.log("Palabra secreta de hoy:", secretWord);
-            }
         } catch (error) {
-            console.error(error);
-            loadingScreen.innerHTML = "<p>Error de conexión. Recarga la página.</p>";
+            loadingScreen.innerHTML = "<p>Error. <button onclick=\"location.reload()\">Reintentar</button></p>";
         } finally {
-            loadingScreen.classList.add("hidden");
-        }
-    }
-
-    async function initGame() {
-        const hasSavedGame = await loadGameState();
-        if (!hasSavedGame) {
-            configModal.showModal(); 
+            if (currentDictionary.length > 0) {
+                loadingScreen.classList.add("hidden");
+            }
         }
     }
 
     lengthSelect.addEventListener("input", (e) => {
         sliderValue.textContent = e.target.value;
     });
-
+    
     configForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
+        e.preventDefault(); 
         configModal.close();
-
-        currentLang = langSelect.value;
+        currentLang = langSelect.value; 
         numCols = parseInt(lengthSelect.value);
-        secretWord = ""; 
-        currentRow = 0;
-        currentCol = 0;
-        isGameOver = false;
-        btnHistoryHeader.classList.add("hidden");
-
-        board.innerHTML = '';
-        keyboard.innerHTML = '';
-
+        localStorage.setItem("wordleConfig", JSON.stringify({ lang: currentLang, cols: numCols }));
         await fetchDictionary(currentLang, numCols);
-        
-        createBoard();
-        createKeyboard();
-        saveGameState(); 
-        
-        announcer.textContent = "Partida iniciada. Palabra de " + numCols + " letras.";
+        startNewGameForDate(getFormattedDate(new Date()));
     });
 
     function createBoard() {
-        board.innerHTML = '';
+        board.innerHTML = "";
         board.style.gridTemplateColumns = "repeat(" + numCols + ", minmax(0, var(--cell-size)))";
         for (let r = 0; r < numRows; r++) {
             for (let c = 0; c < numCols; c++) {
                 const cell = document.createElement("div");
-                cell.classList.add("cell");
+                cell.classList.add("cell"); 
                 cell.setAttribute("id", "cell-" + r + "-" + c);
                 board.appendChild(cell);
             }
@@ -391,37 +714,42 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function createKeyboard() {
-        keyboard.innerHTML = '';
+        keyboard.innerHTML = "";
         
         let middleRow = [];
-        if (currentLang === 'es') {
-            middleRow = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'Ñ'];
+        if (currentLang === "es") {
+            middleRow = ["A", "S", "D", "F", "G", "H", "J", "K", "L", "Ñ"];
         } else {
-            middleRow = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
+            middleRow = ["A", "S", "D", "F", "G", "H", "J", "K", "L"];
         }
         
-        let keyboardLayout = [
-            ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'], 
+        const keyboardLayout = [
+            ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"], 
             middleRow, 
-            ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫']
+            ["ENTER", "Z", "X", "C", "V", "B", "N", "M", "⌫"]
         ];
-
+        
         keyboardLayout.forEach(row => {
-            const rowDiv = document.createElement("div");
+            const rowDiv = document.createElement("div"); 
             rowDiv.classList.add("key-row");
+            
             row.forEach(key => {
-                const button = document.createElement("button");
-                button.textContent = key;
-                button.classList.add("key");
+                const button = document.createElement("button"); 
+                button.textContent = key; 
+                button.classList.add("key"); 
                 button.setAttribute("id", "key-" + key); 
-                if (key === 'ENTER' || key === '⌫') {
+                
+                if (key === "ENTER" || key === "⌫") {
                     button.classList.add("wide-key");
                 }
+                
                 button.addEventListener("click", () => {
                     handleInput(key);
                 });
+                
                 rowDiv.appendChild(button);
             });
+            
             keyboard.appendChild(rowDiv);
         });
     }
@@ -439,29 +767,44 @@ document.addEventListener("DOMContentLoaded", () => {
         for (let c = 0; c < numCols; c++) {
             guess += document.getElementById("cell-" + currentRow + "-" + c).textContent;
         }
-
+        
         if (!validWordsSet.has(guess)) {
-            showToast("La palabra no está en el diccionario.");
-            return false;
+            showToast("No está en el diccionario"); 
+            return false; 
         }
-
+        
         const correctCount = applyColors(guess, currentRow);
-
+        
         if (correctCount === numCols) {
-            isGameOver = true;
-            setTimeout(() => {
-                showToast("¡Felicidades! Has adivinado la palabra.");
-                showHistoryPanel();
-            }, 500);
+            isGameOver = true; 
+            saveToArchive(currentGameDate); 
+            saveGameState();
+            saveGameToDatabase(true, currentRow + 1); 
+            
+            setTimeout(() => { 
+                showToast("¡Magnífico!"); 
+                if (currentGameDate === getFormattedDate(new Date())) {
+                    btnHistoryHeader.classList.remove("hidden"); 
+                }
+                showHistoryPanel(); 
+            }, 1000);
         } else if (currentRow === numRows - 1) { 
-            isGameOver = true;
-            setTimeout(() => {
-                showToast("¡Oh no! Has perdido. La palabra era: " + secretWord);
-                showHistoryPanel();
-            }, 500);
+            isGameOver = true; 
+            saveToArchive(currentGameDate); 
+            saveGameState();
+            saveGameToDatabase(false, numRows); 
+            
+            setTimeout(() => { 
+                showToast("Perdiste. Era: " + secretWord); 
+                if (currentGameDate === getFormattedDate(new Date())) {
+                    btnHistoryHeader.classList.remove("hidden"); 
+                }
+                showHistoryPanel(); 
+            }, 1000);
+        } else {
+            saveGameState();
         }
-
-        saveGameState(); 
+        
         return true; 
     }
 
@@ -474,47 +817,47 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             secretLettersCount[char] = secretLettersCount[char] + 1;
         }
-
+        
         let statuses = [];
         for (let i = 0; i < numCols; i++) {
             statuses.push("absent");
         }
         
         let correctCount = 0; 
-
+        
         for (let i = 0; i < numCols; i++) {
-            if (guess[i] === secretWord[i]) {
-                statuses[i] = "correct";
-                secretLettersCount[guess[i]]--;
-                correctCount++;
+            if (guess[i] === secretWord[i]) { 
+                statuses[i] = "correct"; 
+                secretLettersCount[guess[i]]--; 
+                correctCount++; 
             }
         }
-
+        
         for (let i = 0; i < numCols; i++) {
             if (statuses[i] !== "correct") {
-                if (secretLettersCount[guess[i]] > 0) {
-                    statuses[i] = "present";
-                    secretLettersCount[guess[i]]--;
+                if (secretLettersCount[guess[i]] > 0) { 
+                    statuses[i] = "present"; 
+                    secretLettersCount[guess[i]]--; 
                 }
             }
         }
-
+        
         for (let i = 0; i < numCols; i++) {
-            const letter = guess[i];
-            const status = statuses[i];
-            const cell = document.getElementById("cell-" + rowIdx + "-" + i);
+            const letter = guess[i]; 
+            const status = statuses[i]; 
+            const cell = document.getElementById("cell-" + rowIdx + "-" + i); 
             const keyButton = document.getElementById("key-" + letter);
-
+            
             cell.classList.add(status);
             
             if (keyButton) {
-                if (status === "correct") {
-                    keyButton.classList.remove("present", "absent");
-                    keyButton.classList.add("correct");
+                if (status === "correct") { 
+                    keyButton.classList.remove("present", "absent"); 
+                    keyButton.classList.add("correct"); 
                 } else if (status === "present") {
-                    if (!keyButton.classList.contains("correct")) {
-                        keyButton.classList.remove("absent");
-                        keyButton.classList.add("present");
+                    if (!keyButton.classList.contains("correct")) { 
+                        keyButton.classList.remove("absent"); 
+                        keyButton.classList.add("present"); 
                     }
                 } else if (status === "absent") {
                     if (!keyButton.classList.contains("correct")) {
@@ -525,36 +868,37 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         }
+        
         return correctCount;
     }
 
     function handleInput(key) {
-        if (configModal.open || historyModal.open || authModal.open || isGameOver || validWordsSet.size === 0) {
-            return;
+        if (configModal.open || historyModal.open || authModal.open || statsModal.open || isGameOver || validWordsSet.size === 0) {
+            return; 
         }
-
-        if (key === '⌫' || key === 'Backspace') {
-            if (currentCol > 0) {
-                currentCol--;
-                document.getElementById("cell-" + currentRow + "-" + currentCol).textContent = '';
+        
+        if (key === "⌫" || key === "Backspace") {
+            if (currentCol > 0) { 
+                currentCol--; 
+                document.getElementById("cell-" + currentRow + "-" + currentCol).textContent = ""; 
                 saveGameState(); 
             }
             return;
         }
-
-        if (key === 'ENTER' || key === 'Enter') {
-            if (currentCol === numCols) {
-                if (evaluateGuess()) {
-                    currentRow++;
-                    currentCol = 0;
+        
+        if (key === "ENTER" || key === "Enter") {
+            if (currentCol === numCols) { 
+                if (evaluateGuess()) { 
+                    currentRow++; 
+                    currentCol = 0; 
                     saveGameState(); 
-                }
+                } 
             }
             return;
         }
-
+        
         let isLetter = false;
-        if (currentLang === 'es') {
+        if (currentLang === "es") {
             isLetter = /^[a-zA-ZñÑ]$/.test(key);
         } else {
             isLetter = /^[a-zA-Z]$/.test(key);
@@ -564,7 +908,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (currentCol < numCols) {
                 if (currentRow < numRows) {
                     document.getElementById("cell-" + currentRow + "-" + currentCol).textContent = key.toUpperCase();
-                    currentCol++;
+                    currentCol++; 
                     saveGameState(); 
                 }
             }
@@ -572,9 +916,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     document.addEventListener("keydown", (e) => {
+        if (configModal.open || historyModal.open || authModal.open || statsModal.open) {
+            return;
+        }
+        if (e.key === "Enter") {
+            e.preventDefault(); 
+        }
         handleInput(e.key);
     });
     
     initGame();
     checkSession();
+    loadBlogMessages();
 });
