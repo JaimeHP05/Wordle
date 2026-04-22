@@ -25,6 +25,11 @@
         <h1>Wordle</h1>
 
         <div class="header-right">
+            <button id="btn-toggle-blog" aria-label="Abrir Blog" class="icon-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+            </button>
             <button id="btn-config" class="icon-btn" aria-label="Configuración">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="3"></circle>
@@ -80,6 +85,33 @@
         <button id="close-auth" class="btn-secondary" style="margin-top: 10px;">Cancelar</button>
     </dialog>
 
+    <dialog id="stats-modal" class="modal">
+        <div class="auth-tabs">
+            <button id="tab-mystats" class="auth-tab active">Mis Estadísticas</button>
+            <button id="tab-ranking" class="auth-tab">Ranking Global</button>
+        </div>
+        
+        <div id="mystats-view">
+            <div class="stats-summary">
+                <div><h3 id="stat-played">0</h3><p>Jugadas</p></div>
+                <div><h3 id="stat-winpct">0%</h3><p>Victorias</p></div>
+            </div>
+            <h4>Distribución de Intentos</h4>
+            <div id="stat-distribution" class="stat-distribution"></div>
+        </div>
+
+        <div id="ranking-view" class="hidden">
+            <table class="ranking-table">
+                <thead>
+                    <tr><th>#</th><th>Jugador</th><th>Intentos Medios</th><th>Tiempo Medio</th></tr>
+                </thead>
+                <tbody id="ranking-body"></tbody>
+            </table>
+        </div>
+        
+        <button id="close-stats" class="btn-secondary" style="margin-top:20px;">Cerrar</button>
+    </dialog>
+
     <dialog id="history-modal" class="modal">
         <h2>Histórico de Palabras</h2>
         <p>Palabras de los últimos 5 días (Configuración actual):</p>
@@ -87,18 +119,32 @@
         <button id="close-history" class="btn-primary">Cerrar</button>
     </dialog>
     
-    <main>
-        <div id="announcer" aria-live="polite" class="sr-only"></div>
-
-        <div id="loading-screen" class="hidden">
-            <p>Descargando diccionario, por favor espera...</p>
-        </div>
-
-        <div id="game-board" class="board" role="grid" aria-label="Tablero de juego"></div>
-        <div id="keyboard" class="keyboard" aria-label="Teclado virtual"></div>
-    </main>
-
     <div id="toast-container" class="toast-container"></div>
+
+    <div class="app-layout">
+        <aside id="blog-panel" class="blog-panel">
+            <div class="blog-header">
+                <h2>Comunidad</h2>
+                <button id="btn-close-blog" class="icon-btn mobile-only">✖</button>
+            </div>
+            <div id="blog-messages" class="blog-messages"></div>
+            <form id="blog-form" class="blog-form">
+                <textarea id="blog-input" placeholder="Inicia sesión para escribir..." disabled autocomplete="off" rows="3"></textarea>
+                <button type="submit" id="btn-send-blog" class="btn-primary" disabled>Enviar</button>
+            </form>
+        </aside>
+
+        <main id="game-main">
+            <div id="announcer" aria-live="polite" class="sr-only"></div>
+
+            <div id="loading-screen" class="hidden">
+                <p>Descargando diccionario, por favor espera...</p>
+            </div>
+
+            <div id="game-board" class="board" role="grid" aria-label="Tablero de juego"></div>
+            <div id="keyboard" class="keyboard" aria-label="Teclado virtual"></div>
+        </main>
+    </div>
 
     <dialog id="config-modal" class="modal">
         <h2>Configurar Partida</h2>
