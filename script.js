@@ -39,6 +39,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const mystatsView = document.getElementById("mystats-view");
     const rankingView = document.getElementById("ranking-view");
 
+    const btnShare = document.getElementById("btn-share");
+    const btnChartBar = document.getElementById("btn-chart-bar");
+    const btnChartPie = document.getElementById("btn-chart-pie");
+    const statDistribution = document.getElementById("stat-distribution");
+    const statPieContainer = document.getElementById("stat-pie-container");
+    const statPie = document.getElementById("stat-pie");
+    const statLegend = document.getElementById("stat-legend");
+    let currentDistribution = {};
+
     const btnToggleBlog = document.getElementById("btn-toggle-blog");
     const blogPanel = document.getElementById("blog-panel");
     const btnCloseBlogMobile = document.getElementById("btn-close-blog");
@@ -278,12 +287,81 @@ document.addEventListener("DOMContentLoaded", () => {
         statsModal.close();
     });
 
+    btnChartBar.addEventListener("click", () => {
+        btnChartBar.classList.add("active");
+        btnChartPie.classList.remove("active");
+        statDistribution.classList.remove("hidden");
+        statPieContainer.classList.add("hidden");
+    });
+    
+    btnChartPie.addEventListener("click", () => {
+        btnChartPie.classList.add("active");
+        btnChartBar.classList.remove("active");
+        statPieContainer.classList.remove("hidden");
+        statDistribution.classList.add("hidden");
+        renderPieChart();
+    });
+
+    function renderPieChart() {
+        let total = 0;
+        const distValues = Object.values(currentDistribution);
+        for (let i = 0; i < distValues.length; i++) {
+            total += distValues[i];
+        }
+        
+        statLegend.innerHTML = "";
+        
+        if (total === 0) {
+            statPie.style.background = "transparent";
+            return;
+        }
+        
+        let currentAngle = 0;
+        let conicParts = [];
+        const colors = ["#f5793a", "#a95aa1", "#85c0f9", "#f1c40f", "#538d4e", "#e74c3c"];
+        
+        for (let i = 1; i <= numRows; i++) {
+            let count = 0;
+            if (currentDistribution[i]) {
+                count = currentDistribution[i];
+            }
+            
+            if (count > 0) {
+                let percentage = (count / total) * 100;
+                conicParts.push(colors[i - 1] + " " + currentAngle + "% " + (currentAngle + percentage) + "%");
+                currentAngle += percentage;
+                statLegend.innerHTML += "<div class=\"legend-item\">" +
+                    "<span class=\"legend-color\" style=\"background:" + colors[i - 1] + "\"></span>" +
+                    i + " (" + count + ")" +
+                "</div>";
+            }
+        }
+        statPie.style.background = "conic-gradient(" + conicParts.join(", ") + ")";
+    }
+
     async function loadMyStats() {
         const activeUser = JSON.parse(localStorage.getItem("wordleActiveUser"));
         if (!activeUser) {
             return;
         }
         
+        const todayStr = getFormattedDate(new Date());
+        let states = JSON.parse(localStorage.getItem("wordleStates"));
+        if (!states) {
+            states = {};
+        }
+        const state = states[getStateKey(todayStr)];
+        
+        if (state) {
+            if (state.gameOver) {
+                btnShare.classList.remove("hidden");
+            } else {
+                btnShare.classList.add("hidden");
+            }
+        } else {
+            btnShare.classList.add("hidden");
+        }
+
         try {
             const res = await fetch(API_URL + "/stats/" + activeUser.email);
             const data = await res.json();
@@ -295,6 +373,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             document.getElementById("stat-winpct").textContent = winPct + "%";
 
+            currentDistribution = data.distribution;
             const distContainer = document.getElementById("stat-distribution");
             distContainer.innerHTML = "";
             
@@ -328,6 +407,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     "<span>" + i + "</span>" +
                     "<div class=\"stat-bar " + highlightClass + "\" style=\"width: " + widthPct + "%;\">" + count + "</div>" +
                 "</div>";
+            }
+
+            if (btnChartPie.classList.contains("active")) {
+                renderPieChart();
             }
         } catch (e) {
             console.error("Error stats", e);
@@ -382,6 +465,96 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error(error); 
         }
     }
+
+    function getEmojisForGuess(guess, secret) {
+        let secretLettersCount = {};
+        for (let i = 0; i < secret.length; i++) {
+            let char = secret[i];
+            if (!secretLettersCount[char]) {
+                secretLettersCount[char] = 0;
+            }
+            secretLettersCount[char] = secretLettersCount[char] + 1;
+        }
+        
+        let statuses = [];
+        for (let i = 0; i < numCols; i++) {
+            statuses.push("absent");
+        }
+        
+        for (let i = 0; i < numCols; i++) {
+            if (guess[i] === secret[i]) {
+                statuses[i] = "correct";
+                secretLettersCount[guess[i]]--;
+            }
+        }
+        
+        for (let i = 0; i < numCols; i++) {
+            if (statuses[i] !== "correct") {
+                if (secretLettersCount[guess[i]] > 0) {
+                    statuses[i] = "present";
+                    secretLettersCount[guess[i]]--;
+                }
+            }
+        }
+        
+        let emojiString = "";
+        for (let i = 0; i < statuses.length; i++) {
+            let s = statuses[i];
+            if (s === "correct") {
+                emojiString += "🟩";
+            } else if (s === "present") {
+                emojiString += "🟨";
+            } else {
+                emojiString += "⬛";
+            }
+        }
+        
+        return emojiString;
+    }
+
+    btnShare.addEventListener("click", async () => {
+        const dateStr = getFormattedDate(new Date());
+        let states = JSON.parse(localStorage.getItem("wordleStates"));
+        if (!states) {
+            states = {};
+        }
+        const state = states[getStateKey(dateStr)];
+        
+        if (!state) {
+            return;
+        }
+        if (!state.gameOver) {
+            return;
+        }
+
+        let langUpper = "ES";
+        if (currentLang === "en") {
+            langUpper = "EN";
+        }
+
+        let shareText = "Wordle " + langUpper + " - " + dateStr + " - " + state.currentRow + "/" + numRows + "\n\n";
+        
+        for (let r = 0; r < state.currentRow; r++) {
+            shareText += getEmojisForGuess(state.board[r], state.secret) + "\n";
+        }
+
+        try {
+            await navigator.clipboard.writeText(shareText);
+            showToast("¡Copiado al portapapeles!");
+        } catch (e) {
+            showToast("Resultado enviado al chat.");
+        }
+        
+        if (!blogInput.disabled) {
+            blogInput.value = shareText;
+            if (!blogPanel.classList.contains("active")) {
+                blogPanel.classList.add("active");
+                loadBlogMessages();
+            }
+            blogInput.focus();
+        }
+        statsModal.close();
+    });
 
     async function loadBlogMessages() {
         try {
