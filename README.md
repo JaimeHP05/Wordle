@@ -13,7 +13,7 @@ Este repositorio contiene el desarrollo de una aplicación web basada en Wordle.
 * **Configuración Modular:** Permite elegir el idioma (Español/Inglés) y la longitud de la palabra (5 a 10 letras).
 * **Persistencia de Datos:** Guardado de estado en caché para invitados y en Base de Datos para usuarios registrados.
 * **Comunidad Integrada:** Sistema de usuarios, blog de comentarios y ranking competitivo ordenado por intentos y tiempo.
-* **Accesibilidad:** Modo de colores alternativo para personas daltónicas.
+* **Accesibilidad:** Colores alternativo para personas daltónicas, tipografías para personas disléxicas, y más opciones.
 
 ---
 
@@ -35,15 +35,21 @@ El desarrollo de este proyecto sigue la metodología ágil Scrum, gestionada a t
 
 ## Seguimiento y Progreso (Burndown Chart)
 
-A continuación, se muestra el Burndown Chart actualizado semanalmente para reflejar el progreso del trabajo frente al tiempo estimado:
+A continuación, se muestra el Burndown Chart para reflejar el progreso del trabajo frente al tiempo estimado:
 
-(foto)
+```mermaid
+xychart-beta
+    title "Burndown Chart - (Historias 1 a 9)"
+    x-axis "Fechas de finalización" ["Inicio", "17 Mar", "19 Mar", "30 Mar", "02 Abr", "09 Abr", "14 Abr", "21 Abr", "22 Abr", "23 Abr"]
+    y-axis "Puntos Restantes" 0 --> 32
+    line "Progreso Ideal" [32, 28, 25, 21, 18, 14, 11, 7, 4, 0]
+    line "Progreso Real"  [32, 29, 24, 21, 16, 13, 11, 8, 4, 0]
+```
 
 ---
 
 ## Stack Tecnológico
-* (Esto es modificable, se puede usar un lenguaje nuevo o terminar no usando uno)
 * **Frontend:** HTML5, CSS3, JavaScript.
-* **Backend:** PHP.
-* **Base de Datos:** MySQL.
+* **Backend:** Node.js, Express.
+* **Base de Datos:** SQLite.
 * **Control de Versiones:** Git & GitHub.
