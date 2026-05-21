@@ -190,31 +190,31 @@
             
             <div class="form-group toggle-group">
                 <label for="theme-toggle" data-i18n="theme_label">Modo Claro:</label>
-                <label class="switch">
+                <div class="switch">
                     <input type="checkbox" id="theme-toggle">
                     <span class="slider round"></span>
-                </label>
+                </div>
             </div>
             <div class="form-group toggle-group">
                 <label for="anim-toggle" data-i18n="anim_label">Reducir Animaciones:</label>
-                <label class="switch">
+                <div class="switch">
                     <input type="checkbox" id="anim-toggle">
                     <span class="slider round"></span>
-                </label>
+                </div>
             </div>
             <div class="form-group toggle-group">
                 <label for="colorblind-toggle" data-i18n="colorblind_label">Alto Contraste:</label>
-                <label class="switch">
+                <div class="switch">
                     <input type="checkbox" id="colorblind-toggle">
                     <span class="slider round"></span>
-                </label>
+                </div>
             </div>
             <div class="form-group toggle-group">
                 <label for="dyslexic-toggle" data-i18n="dyslexic_label">Fuente para Dislexia:</label>
-                <label class="switch">
+                <div class="switch">
                     <input type="checkbox" id="dyslexic-toggle">
                     <span class="slider round"></span>
-                </label>
+                </div>
             </div>
 
             <button type="submit" class="btn-primary" style="margin-top: 15px;" data-i18n="save_play">Guardar y Jugar</button>
@@ -229,6 +229,7 @@
             </div>
             <div id="blog-messages" class="blog-messages"></div>
             <form id="blog-form" class="blog-form">
+                <label for="blog-input" class="sr-only" data-i18n="blog_input_label">Mensaje:</label>
                 <textarea id="blog-input" disabled autocomplete="off" rows="3"></textarea>
                 <button type="submit" id="btn-send-blog" class="btn-primary" disabled data-i18n="send">Enviar</button>
             </form>
