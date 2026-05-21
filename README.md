@@ -1,41 +1,101 @@
 # 🟩🟨⬜ Proyecto Wordle - Ingeniería Web ⬜🟨🟩
 
-**Integrantes del equipo:** Jaime Hernández Pérez 
+**Autor:** Jaime Hernández Pérez
 
 ---
 
-## Descripción del Proyecto
+## Descripción
 
-Este repositorio contiene el desarrollo de una aplicación web basada en Wordle. El objetivo principal es mejorar las versiones existentes, resolviendo problemas de usabilidad, eliminando paywalls, y añadiendo un componente social.
+Este repositorio contiene una versión personalizada del juego Wordle desarrollada como proyecto de Ingeniería Web. La aplicación incluye funcionalidades de juego, persistencia local, autenticación de usuarios, estadísticas, ranking global y un blog comunitario.
 
-### Características Principales:
-* **Diseño 100% Responsive:** Adaptación perfecta tanto para dispositivos móviles como para resoluciones de escritorio.
-* **Configuración Modular:** Permite elegir el idioma (Español/Inglés) y la longitud de la palabra (5 a 10 letras).
-* **Persistencia de Datos:** Guardado de estado en caché para invitados y en Base de Datos para usuarios registrados.
-* **Comunidad Integrada:** Sistema de usuarios, blog de comentarios y ranking competitivo ordenado por intentos y tiempo.
-* **Accesibilidad:** Colores alternativo para personas daltónicas, tipografías para personas disléxicas, y más opciones.
+El objetivo del proyecto es ofrecer una experiencia de juego más completa y accesible que una implementación básica de Wordle, incorporando además opciones de configuración y mejoras de usabilidad.
 
 ---
 
-## Metodología Ágil (Scrum)
+## Características
 
-El desarrollo de este proyecto sigue la metodología ágil Scrum, gestionada a través de las herramientas de GitHub. 
-
-* **Product Backlog & Tablero Kanban:** Gestionado mediante [GitHub Projects](https://github.com/users/JaimeHP05/projects/3).
-* **Historias de Usuario:** Registradas como Issues con etiquetas de estimación (points) y tipo (type).
-* **Sprints:** Organizados mediante Milestones de 2 semanas de duración.
-
-### Planificación de Sprints:
-1. **Sprint 1:** Interfaz visual (tablero) y sistema de entrada (teclado virtual y físico).
-2. **Sprint 2:** Lógica del motor (diccionarios, validación de palabras y evaluación de colores).
-3. **Sprint 3:** Persistencia de estado, histórico de 5 días y sistema de autenticación.
-4. **Sprint 4:** Panel de estadísticas, ranking global, blog de la comunidad y resolución de bugs.
+- Juego tipo Wordle con teclado virtual y soporte para teclado físico.
+- Selección de idioma: español e inglés.
+- Selección de longitud de palabra entre 5 y 10 letras.
+- Guardado del estado de partida en `localStorage`.
+- Registro e inicio de sesión de usuarios.
+- Persistencia de partidas, estadísticas y mensajes en SQLite.
+- Panel de estadísticas con distribución de intentos, racha actual y mejor racha.
+- Ranking global de jugadores ordenado por media de intentos y tiempo.
+- Blog comunitario para publicar mensajes.
+- Historial de palabras jugadas en los últimos 5 días.
+- Opciones de accesibilidad:
+  - modo claro
+  - alto contraste / modo daltónico
+  - fuente para dislexia
+  - reducción de animaciones
+- Interfaz adaptada a escritorio y dispositivos móviles.
 
 ---
 
-## Seguimiento y Progreso (Burndown Chart)
+## Tecnologías
 
-A continuación, se muestra el Burndown Chart para reflejar el progreso del trabajo frente al tiempo estimado:
+- **Frontend:** HTML5, CSS3 y JavaScript
+- **Backend:** Node.js y Express
+- **Base de datos:** SQLite
+- **Dependencias principales:** `express`, `sqlite3`, `bcryptjs`, `cors`
+
+---
+
+## Estructura del proyecto
+
+- [index.html](index.html): Estructura principal de la interfaz.
+- [style.css](style.css): Estilos visuales y responsive design.
+- [script.js](script.js): Lógica del juego, configuración, accesibilidad y comunicación con el servidor.
+- [server.js](server.js): API REST, autenticación, guardado de partidas, blog y ranking.
+- `wordle.db`: Base de datos SQLite generada automáticamente al arrancar el servidor.
+
+---
+
+## Requisitos previos
+
+- Node.js instalado.
+- npm instalado.
+- Conexión a internet para descargar los diccionarios desde GitHub Raw.
+
+---
+
+## Instalación y ejecución
+
+1. Clona o descarga el repositorio.
+2. Abre una terminal en la carpeta del proyecto.
+3. Instala las dependencias:
+
+```bash
+npm install
+```
+
+4. Inicia el servidor:
+
+```bash
+node server.js
+```
+
+5. Abre el navegador en:
+
+```text
+http://localhost:3000
+```
+
+---
+
+## Funcionamiento
+
+- Al arrancar, el servidor crea automáticamente la base de datos SQLite si no existe.
+- El juego descarga el diccionario correspondiente al idioma seleccionado.
+- La configuración del usuario y el estado de la partida se guardan en el navegador.
+- Los usuarios registrados pueden consultar estadísticas, ranking y usar el blog.
+
+---
+
+## Metodología de trabajo
+
+El proyecto se desarrolló siguiendo una organización basada en Scrum y GitHub Projects, con planificación por sprints, historias de usuario y seguimiento mediante tablero Kanban.
 
 ```mermaid
 xychart-beta
@@ -46,10 +106,12 @@ xychart-beta
     line "Progreso Real"  [32, 29, 24, 21, 16, 13, 11, 8, 4, 0]
 ```
 
----
+* **Product Backlog & Tablero Kanban:** Gestionado mediante [GitHub Projects](https://github.com/users/JaimeHP05/projects/3).
+* **Historias de Usuario:** Registradas como Issues con etiquetas de estimación (points) y tipo (type).
+* **Sprints:** Organizados mediante Milestones de 2 semanas de duración.
 
-## Stack Tecnológico
-* **Frontend:** HTML5, CSS3, JavaScript.
-* **Backend:** Node.js, Express.
-* **Base de Datos:** SQLite.
-* **Control de Versiones:** Git & GitHub.
+### Planificación de Sprints:
+**Sprint 1:** Interfaz visual (tablero) y sistema de entrada (teclado virtual y físico).
+**Sprint 2:** Lógica del motor (diccionarios, validación de palabras y evaluación de colores).
+**Sprint 3:** Persistencia de estado, histórico de 5 días y sistema de autenticación.
+**Sprint 4:** Panel de estadísticas, ranking global, blog de la comunidad y resolución de bugs.
