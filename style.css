@@ -422,6 +422,8 @@ main {
 .wide-key {
     flex: 1.5;
     font-size: 1rem;
+    background-color: #5f6062;
+    color: #ffffff;
 }
 
 #loading-screen {
