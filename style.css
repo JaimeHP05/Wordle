@@ -469,6 +469,10 @@ main {
     font-weight: bold;
 }
 
+.toggle-label {
+    font-weight: bold;
+}
+
 .form-group select, 
 .form-group input[type="text"], 
 .form-group input[type="password"], 
@@ -512,6 +516,10 @@ input[type="range"] {
     align-items: center;
 }
 
+.switch-row {
+    cursor: pointer;
+}
+
 .switch {
     position: relative;
     display: inline-block;
@@ -520,9 +528,11 @@ input[type="range"] {
 }
 
 .switch input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
     opacity: 0;
-    width: 0;
-    height: 0;
+    cursor: pointer;
 }
 
 .slider.round {
