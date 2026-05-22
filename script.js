@@ -171,6 +171,15 @@ document.addEventListener("DOMContentLoaded", () => {
     colorblindToggle.addEventListener("change", applyA11yPreferences);
     dyslexicToggle.addEventListener("change", applyA11yPreferences);
 
+    [themeToggle, animToggle, colorblindToggle, dyslexicToggle].forEach((toggle) => {
+        toggle.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                toggle.click();
+            }
+        });
+    });
+
     function stringToColor(str) {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
