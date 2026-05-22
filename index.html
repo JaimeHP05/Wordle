@@ -188,34 +188,34 @@
             <hr style="border-color: var(--border-color); margin: 20px 0;">
             <h3 data-i18n="a11y_title">Accesibilidad</h3>
             
-            <div class="form-group toggle-group">
-                <label for="theme-toggle" data-i18n="theme_label">Modo Claro:</label>
-                <div class="switch">
+            <label class="form-group toggle-group switch-row" for="theme-toggle">
+                <span class="toggle-label" data-i18n="theme_label">Modo Claro:</span>
+                <span class="switch">
                     <input type="checkbox" id="theme-toggle">
-                    <span class="slider round"></span>
-                </div>
-            </div>
-            <div class="form-group toggle-group">
-                <label for="anim-toggle" data-i18n="anim_label">Reducir Animaciones:</label>
-                <div class="switch">
+                    <span class="slider round" aria-hidden="true"></span>
+                </span>
+            </label>
+            <label class="form-group toggle-group switch-row" for="anim-toggle">
+                <span class="toggle-label" data-i18n="anim_label">Reducir Animaciones:</span>
+                <span class="switch">
                     <input type="checkbox" id="anim-toggle">
-                    <span class="slider round"></span>
-                </div>
-            </div>
-            <div class="form-group toggle-group">
-                <label for="colorblind-toggle" data-i18n="colorblind_label">Alto Contraste:</label>
-                <div class="switch">
+                    <span class="slider round" aria-hidden="true"></span>
+                </span>
+            </label>
+            <label class="form-group toggle-group switch-row" for="colorblind-toggle">
+                <span class="toggle-label" data-i18n="colorblind_label">Alto Contraste:</span>
+                <span class="switch">
                     <input type="checkbox" id="colorblind-toggle">
-                    <span class="slider round"></span>
-                </div>
-            </div>
-            <div class="form-group toggle-group">
-                <label for="dyslexic-toggle" data-i18n="dyslexic_label">Fuente para Dislexia:</label>
-                <div class="switch">
+                    <span class="slider round" aria-hidden="true"></span>
+                </span>
+            </label>
+            <label class="form-group toggle-group switch-row" for="dyslexic-toggle">
+                <span class="toggle-label" data-i18n="dyslexic_label">Fuente para Dislexia:</span>
+                <span class="switch">
                     <input type="checkbox" id="dyslexic-toggle">
-                    <span class="slider round"></span>
-                </div>
-            </div>
+                    <span class="slider round" aria-hidden="true"></span>
+                </span>
+            </label>
 
             <button type="submit" class="btn-primary" style="margin-top: 15px;" data-i18n="save_play">Guardar y Jugar</button>
         </form>
